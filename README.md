@@ -5,4 +5,4 @@
 
 #### cedargrove_widgets
 #### MagicEye
-#### [Chronos (Time)](https://github.com/CedarGroveStudios/Widgets/blob/master/docs/pseudo_readthedocs_magic_eye.pdf)
+#### [MagicEye](https://github.com/CedarGroveStudios/Widgets/blob/master/docs/pseudo_readthedocs_magic_eye.pdf)
