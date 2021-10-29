@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-10-27 v0.2
+# 2021-10-29 v0.3
 
 import board
 import displayio
@@ -36,15 +36,24 @@ class MagicEye:
         display_size=(WIDTH, HEIGHT),
         bezel_color=Palette.BLACK,
     ):
-        """Instantiate the 6E5 magic eye graphic widget. Defaults to
+        """Instantiate the 6E5 magic eye display widget. This class creates a
+        hierarchical DisplayIO group consisting of sub-groups for the target
+        anode, eye, and bezewl/cathode. Defaults to an object with
         display center (0.5, 0.5) and radius of 0.25, both in normalized
-        display units. Screen width/height defaults to (320, 240). The default
-        bezel color is BLACK. Builds a layered displayio image group.
+        display units. Screen width/height defaults to (320, 240) pixels. The
+        default RGB bezel color is 0x000000 (black).
 
-        :param center: The magic eye center x,y tuple in normalized display units.
-        :param radius: The magic eye radius in normalized display units.
-        :param display_size: The display width and height tuple in pixels.
-        :param bezel_color: The magic eye bezel RGB color value."""
+        :param center: The floating point width and height tuple value
+        representing the center of the target anode in relative display units.
+        Defaults to (0.5, 0.5).
+        :param radius: The floating point radius value of the target anode in
+        relative display units. Defaults to 0.25.
+        :param display_size: The host display's integer width and height tuple
+        expressed in pixels. If the host includes an integral display, the
+        default value is (board.DISPLAY.width, board.DISPLAY.height), otherwise
+        the default size value is (320, 240).
+        :param bezel_color: The integer RGB color value for the bezel and
+        cathode light shield. Defaults to 0x000000 (black)."""
 
         # Dial normalized screen values
         self._center_norm = center
@@ -62,9 +71,9 @@ class MagicEye:
 
         # Create displayio groups
         self._image_group = displayio.Group()  # Primary group for MagicEye class
-        self._dial_group = displayio.Group()  # Target anode and wire shadows
-        self._eye_group = displayio.Group()  # Dynamic eye and brow
-        self._bezel_group = displayio.Group()  # Wedges, doughnut, light shield
+        self._anode_group = displayio.Group()  # Target anode and wire shadows
+        self._eye_group = displayio.Group()  # Dynamic eye and brow shadow wedge
+        self._bezel_group = displayio.Group()  # Bezel wedges/doughnut and light shield
 
         self._bezel_color = bezel_color  # Set to match background color
 
@@ -81,20 +90,20 @@ class MagicEye:
             outline=None,
             stroke=0,
         )
-        self._dial_group.append(self.target_anode)
+        self._anode_group.append(self.target_anode)
 
         # Define wire shadows
         self._rx, self._ry = self.dial_to_rect(
             0.25, center=self.CENTER, radius=self._inside_radius
         )
         self.shadow_a = Line(self._sx, self._sy, self._rx, self._ry, Palette.BLACK)
-        self._dial_group.append(self.shadow_a)
+        self._anode_group.append(self.shadow_a)
 
         self._rx, self._ry = self.dial_to_rect(
             0.75, center=self.CENTER, radius=self._inside_radius
         )
         self.shadow_b = Line(self._sx, self._sy, self._rx, self._ry, Palette.BLACK)
-        self._dial_group.append(self.shadow_b)
+        self._anode_group.append(self.shadow_b)
 
         # Define bezel: corner wedges
         self._corner_side = int(
@@ -163,7 +172,7 @@ class MagicEye:
         self._bezel_group.append(self._cathode_shield)
 
         # Arrange image group layers
-        self._image_group.append(self._dial_group)
+        self._image_group.append(self._anode_group)
         self._image_group.append(self._eye_group)
         self._image_group.append(self._bezel_group)
         return
@@ -173,13 +182,16 @@ class MagicEye:
         """Displayio dial group."""
         return self._image_group
 
-    def plot_eye(self, eye_value=0):
-        """Display eye wedge. Input is normalized for 0.0 to 1.0 (open to
-        closed) within the 100-degree window, but will accept a value up to 2.0.
+    def plot_eye(self, signal=0):
+        """Plot the MagicEye shadow wedge. Input is a positive floating point
+        value normalized for 0.0 to 1.0 (no signal to full signal) within the
+        100-degree shadow wedge, but accepts a signal value up to and including
+        2.0 (signal overlap).
 
-        :param eye_normal: The normalized eye width."""
+        :param eye_normal: The normalized floating point signal  value for the
+        shadow wedge. Defaults to 0 (no signal)."""
 
-        self._eye_value = eye_value
+        self._eye_value = signal
         self._eye_value = min(max(0, self._eye_value), 2.0)
         if self._eye_value > 1.0:
             self._eye_color = Palette.CYAN
@@ -190,10 +202,10 @@ class MagicEye:
             self._center_norm[0], self._center_norm[1]
         )
         self._x1, self._y1 = self.dial_to_rect(
-            0.35 + (eye_value * 0.15), center=self.CENTER, radius=self._outside_radius
+            0.35 + (self._eye_value * 0.15), center=self.CENTER, radius=self._outside_radius
         )
         self._x2, self._y2 = self.dial_to_rect(
-            0.65 - (eye_value * 0.15), center=self.CENTER, radius=self._outside_radius
+            0.65 - (self._eye_value * 0.15), center=self.CENTER, radius=self._outside_radius
         )
 
         self.eye = Triangle(

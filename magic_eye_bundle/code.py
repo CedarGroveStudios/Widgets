@@ -12,6 +12,9 @@ from simpleio import tone
 
 from cedargrove_widgets.magic_eye import MagicEye
 
+from cedargrove_sdcard import SDCard
+sd_card = SDCard()
+
 tone(board.A0, 440, 0.1)
 
 display = board.DISPLAY
@@ -83,3 +86,5 @@ while True:
         magic_eye_8.plot_eye(random.randrange(0, 120) / 100)
         magic_eye_9.plot_eye(random.randrange(0, 120) / 100)
         magic_eye_A.plot_eye(random.randrange(0, 120) / 100)
+
+    sd_card.screenshot()
