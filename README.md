@@ -1,7 +1,7 @@
 # Widgets
  An in-development collection of widget-like CircuitPython DisplayIO graphical objects.
 
- ![Image of Module](https://github.com/CedarGroveStudios/Widgets/blob/master/photos%20and%20graphics/social_wide.png)
+ ![MagicEye Signal Response](https://github.com/CedarGroveStudios/Widgets/blob/main/photos_and_graphics/magic_eye_signal_response.png)
 
 #### cedargrove_widgets
 >#### MagicEye description
