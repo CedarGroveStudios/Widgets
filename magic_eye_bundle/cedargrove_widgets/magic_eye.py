@@ -175,6 +175,8 @@ class MagicEye:
         self._image_group.append(self._anode_group)
         self._image_group.append(self._eye_group)
         self._image_group.append(self._bezel_group)
+
+        self.plot_eye()  # Plot no signal shadow wedge
         return
 
     @property

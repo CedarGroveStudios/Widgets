@@ -38,7 +38,7 @@ class MagicEye:
     ):
         """Instantiate the 6E5 magic eye display widget. This class creates a
         hierarchical DisplayIO group consisting of sub-groups for the target
-        anode, eye, and bezewl/cathode. Defaults to an object with
+        anode, eye, and bezel/cathode. Defaults to an object with
         display center (0.5, 0.5) and radius of 0.25, both in normalized
         display units. Screen width/height defaults to (320, 240) pixels. The
         default RGB bezel color is 0x000000 (black).
@@ -175,6 +175,8 @@ class MagicEye:
         self._image_group.append(self._anode_group)
         self._image_group.append(self._eye_group)
         self._image_group.append(self._bezel_group)
+
+        self.plot_eye()  # Plot no signal shadow wedge
         return
 
     @property
