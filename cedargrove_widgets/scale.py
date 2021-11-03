@@ -1,23 +1,15 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# dial.py
-# 2021-10-28 v0.2
+# scale.py
+# 2021-11-02 v0.2
 
-import board
 import displayio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_display_shapes.circle import Circle
 from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.triangle import Triangle
-
-if 'DISPLAY' in dir(board):
-    WIDTH = board.DISPLAY.width
-    HEIGHT = board.DISPLAY.height
-else:
-    WIDTH = 320
-    HEIGHT = 240
 
 
 class Palette:
@@ -29,17 +21,36 @@ class Palette:
 
 
 class Dial:
-    def __init__(self, center=(0.50, 0.50), radius=0.25):
+    def __init__(self, center=(0.50, 0.50), radius=0.25, display_size=(None, None)):
         """Instantiate the dial graphic for PyPortal devices. Defaults to center
-        at 0.5, 0.5 with a radius of 0.25 (normalized display units). Builds a
-        displayio dial group.
+        at 0.5, 0.5 with a radius of 0.25 (normalized display units).
+        Display size in pixels is specified as an integer tuple. If the
+        display_size tuple is not specified and an integral display is listed
+        in the board class, the display_size tuple will be equal to the
+        integral display width and height.
+        Builds a displayio dial group.
 
         :param center: The dial center x,y tuple in normalized display units.
-        :param radius: The dial radius in normalized display units."""
+        :param radius: The dial radius in normalized display units.
+        :param display_size: The host display's integer width and height tuple
+        expressed in pixels. If (None, None) and the host includes an integral
+        display, the value is (board.DISPLAY.width, board.DISPLAY.height)."""
 
         # Dial normalized screen values
         self._center_norm = center
         self._radius_norm = radius
+
+        # Determine default display size in pixels
+        if None in display_size:
+            import board
+            if 'DISPLAY' in dir(board):
+                self.WIDTH = board.DISPLAY.width
+                self.HEIGHT = board.DISPLAY.height
+            else:
+                raise ValueError("No integral display. Specify display size.")
+        else:
+            self.WIDTH = display_size[0]
+            self.HEIGHT = display_size[1]
 
         # Dial pixel screen values
         self.CENTER = int(center[0] * Screen.WIDTH), int(center[1] * Screen.HEIGHT)
@@ -163,6 +174,11 @@ class Dial:
     def display_group(self):
         """Displayio dial group."""
         return self._dial_group
+
+    @property
+    def display_size(self):
+        """Size of display."""
+        return (self.WIDTH, self.HEIGHT)
 
     @property
     def needles_group(self):

@@ -31,13 +31,14 @@ class MagicEye:
     ):
         """Instantiate the 6E5 magic eye display widget. This class creates a
         hierarchical DisplayIO group consisting of sub-groups for the target
-        anode, eye, and bezewl/cathode. Defaults to an object with
+        anode, eye, and bezel/cathode. Defaults to an object with
         display center (0.5, 0.5) and radius of 0.25, both in normalized
-        display units. Display size in pixels is specified as an
-        integer tuple. If the display_size tuple is not specified and an
-        integral display is listed in the board class, the display_size tuple
-        will be equal to the integral display width and height . The
-        default RGB bezel color is 0x000000 (black).
+        display units.
+        Display size in pixels is specified as an integer tuple. If the
+        display_size tuple is not specified and an integral display is listed
+        in the board class, the display_size tuple will be equal to the
+        integral display width and height. The default RGB bezel color is
+        0x000000 (black).
 
         :param center: The floating point width and height tuple value
         representing the center of the target anode in relative display units.
@@ -67,8 +68,6 @@ class MagicEye:
             self.HEIGHT = display_size[1]
 
         # Dial pixel screen values
-        #self.WIDTH = display_size[0]
-        #self.HEIGHT = display_size[1]
         self.CENTER = int(center[0] * self.WIDTH), int(center[1] * self.HEIGHT)
         self.RADIUS = int(radius * min(self.WIDTH, self.HEIGHT))
 
