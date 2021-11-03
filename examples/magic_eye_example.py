@@ -20,7 +20,6 @@ display = board.DISPLAY
 display.brightness = 0.75
 
 magic_eye_1 = MagicEye()
-
 magic_eye_2 = MagicEye((0.25, 0.25), radius=0.10)
 magic_eye_1.display_group.append(magic_eye_2.display_group)
 

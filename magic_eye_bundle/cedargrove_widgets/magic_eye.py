@@ -2,22 +2,15 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-10-29 v0.3
+# 2021-11-02 v0.4
 
-import board
+#import board
 import displayio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_display_shapes.circle import Circle
 from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.triangle import Triangle
-
-if 'DISPLAY' in dir(board):
-    WIDTH = board.DISPLAY.width
-    HEIGHT = board.DISPLAY.height
-else:
-    WIDTH = 320
-    HEIGHT = 240
 
 
 class Palette:
@@ -33,14 +26,17 @@ class MagicEye:
         self,
         center=(0.50, 0.50),
         radius=0.25,
-        display_size=(WIDTH, HEIGHT),
+        display_size=(None, None),
         bezel_color=Palette.BLACK,
     ):
         """Instantiate the 6E5 magic eye display widget. This class creates a
         hierarchical DisplayIO group consisting of sub-groups for the target
-        anode, eye, and bezel/cathode. Defaults to an object with
+        anode, eye, and bezewl/cathode. Defaults to an object with
         display center (0.5, 0.5) and radius of 0.25, both in normalized
-        display units. Screen width/height defaults to (320, 240) pixels. The
+        display units. Display size in pixels is specified as an
+        integer tuple. If the display_size tuple is not specified and an
+        integral display is listed in the board class, the display_size tuple
+        will be equal to the integral display width and height . The
         default RGB bezel color is 0x000000 (black).
 
         :param center: The floating point width and height tuple value
@@ -49,19 +45,30 @@ class MagicEye:
         :param radius: The floating point radius value of the target anode in
         relative display units. Defaults to 0.25.
         :param display_size: The host display's integer width and height tuple
-        expressed in pixels. If the host includes an integral display, the
-        default value is (board.DISPLAY.width, board.DISPLAY.height), otherwise
-        the default size value is (320, 240).
-        :param bezel_color: The integer RGB color value for the bezel and
-        cathode light shield. Defaults to 0x000000 (black)."""
+        expressed in pixels. If (None, None) and the host includes an integral
+        display, the value is (board.DISPLAY.width, board.DISPLAY.height).
+        :param bezel_color: The integer RGB color value for the outer bezel.
+        Defaults to 0x000000 (black)."""
 
-        # Dial normalized screen values
+        # Normalized screen values for the dial
         self._center_norm = center
         self._radius_norm = radius
 
+        # Determine default display size in pixels
+        if None in display_size:
+            import board
+            if 'DISPLAY' in dir(board):
+                self.WIDTH = board.DISPLAY.width
+                self.HEIGHT = board.DISPLAY.height
+            else:
+                raise ValueError("No integral display. Specify display size.")
+        else:
+            self.WIDTH = display_size[0]
+            self.HEIGHT = display_size[1]
+
         # Dial pixel screen values
-        self.WIDTH = display_size[0]
-        self.HEIGHT = display_size[1]
+        #self.WIDTH = display_size[0]
+        #self.HEIGHT = display_size[1]
         self.CENTER = int(center[0] * self.WIDTH), int(center[1] * self.HEIGHT)
         self.RADIUS = int(radius * min(self.WIDTH, self.HEIGHT))
 
@@ -72,7 +79,7 @@ class MagicEye:
         # Create displayio groups
         self._image_group = displayio.Group()  # Primary group for MagicEye class
         self._anode_group = displayio.Group()  # Target anode and wire shadows
-        self._eye_group = displayio.Group()  # Dynamic eye and tarsus shadow wedge
+        self._eye_group = displayio.Group()  # Dynamic eye and brow shadow wedge
         self._bezel_group = displayio.Group()  # Bezel wedges/doughnut and light shield
 
         self._bezel_color = bezel_color  # Set to match background color
@@ -184,6 +191,11 @@ class MagicEye:
         """Displayio dial group."""
         return self._image_group
 
+    @property
+    def display_size(self):
+        """Size of display."""
+        return (self.WIDTH, self.HEIGHT)
+
     def plot_eye(self, signal=0):
         """Plot the MagicEye shadow wedge. Input is a positive floating point
         value normalized for 0.0 to 1.0 (no signal to full signal) within the
@@ -227,8 +239,8 @@ class MagicEye:
         self._w = max(self._x1, self._x2) - self._x
         self._h = abs(self.CENTER[1] + self._outside_radius - self._y) + 1
 
-        self.tarsus = Rect(self._x, self._y, self._w, self._h, fill=self._eye_color)
-        self._eye_group.append(self.tarsus)
+        self.brow = Rect(self._x, self._y, self._w, self._h, fill=self._eye_color)
+        self._eye_group.append(self.brow)
 
         if len(self._eye_group) > 2:
             self._eye_group.remove(self._eye_group[0])
