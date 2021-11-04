@@ -19,6 +19,50 @@ class Palette:
     GREEN_DK = 0x006000
     GREEN_LT = 0x40A060
 
+class Case:
+    def __init__(self, center=(0.50, 0.50), scale=1.0):
+        """Instantiate the scale case graphic for PyPortal devices.
+        Builds a displayio case group."""
+
+        self._center_norm = center
+        self._scale = scale
+
+        self._case_group = displayio.Group()
+
+        self._sx0, self._sy0 = display_to_pixel(0.50, 0.50)
+        self._sx1, self._sy1 = display_to_pixel(0.65, 0.80)
+        self._sx2, self._sy2 = display_to_pixel(0.35, 0.80)
+        self._scale_base = Triangle(
+            self._sx0,
+            self._sy0,
+            self._sx1,
+            self._sy1,
+            self._sx2,
+            self._sy2,
+            fill=Palette.GRAY,
+            outline=Palette.BLACK,
+        )
+        self._case_group.append(self._scale_base)
+
+        self._sx, self._sy = display_to_pixel(0.34, 0.80)
+        self._sw, self._sh = display_to_pixel(0.32, 0.06)
+        self._scale_foot = RoundRect(
+            self._sx,
+            self._sy,
+            width=self._sw,
+            height=self._sh,
+            r=5,
+            fill=Palette.GRAY,
+            outline=Palette.BLACK,
+        )
+        self._case_group.append(self._scale_foot)
+        return
+
+    @property
+    def display_group(self):
+        """Displayio case group."""
+        return self._case_group
+
 
 class Dial:
     def __init__(self, center=(0.50, 0.50), radius=0.25, display_size=(None, None)):
@@ -67,8 +111,8 @@ class Dial:
         self._needles_group = displayio.Group()
 
         # Define moveable plate graphic
-        self._sx, self._sy = screen_to_rect(0.46, 0.16)
-        self._sw, self._sh = screen_to_rect(0.08, 0.25)
+        self._sx, self._sy = display_to_pixel(0.46, 0.16)
+        self._sw, self._sh = display_to_pixel(0.08, 0.25)
         self.riser = Rect(
             self._sx,
             self._sy,
@@ -79,8 +123,8 @@ class Dial:
         )
         self._plate_group.append(self.riser)
 
-        self._sx, self._sy = screen_to_rect(0.34, 0.16)
-        self._sw, self._sh = screen_to_rect(0.32, 0.06)
+        self._sx, self._sy = display_to_pixel(0.34, 0.16)
+        self._sw, self._sh = display_to_pixel(0.32, 0.06)
         self.plate = RoundRect(
             self._sx,
             self._sy,
@@ -93,8 +137,8 @@ class Dial:
         self._plate_group.append(self.plate)
 
         # Define primary dial graphic
-        self._sx, self._sy = screen_to_rect(self._center_norm[0], self._center_norm[1])
-        self._ry, self._ry = screen_to_rect(0.00, self._radius_norm)
+        self._sx, self._sy = display_to_pixel(self._center_norm[0], self._center_norm[1])
+        self._ry, self._ry = display_to_pixel(0.00, self._radius_norm)
         self.scale_dial = Circle(
             self._sx,
             self._sy,
@@ -109,25 +153,25 @@ class Dial:
         for i in range(0, Defaults.MAX_GR, Defaults.MAX_GR // 10):
             self._hash_value = Label(FONT_2, text=str(i), color=Palette.CYAN)
             self._hash_value.anchor_point = (0.5, 0.5)
-            self._hash_value.anchored_position = dial_to_rect(
+            self._hash_value.anchored_position = dial_to_pixel(
                 i / Defaults.MAX_GR, radius=self._inside_radius
             )
             self._dial_group.append(self._hash_value)
 
-            self._x0, self._y0 = dial_to_rect(
+            self._x0, self._y0 = dial_to_pixel(
                 i / Defaults.MAX_GR, radius=self._outside_radius
             )
-            self._x1, self._y1 = dial_to_rect(i / Defaults.MAX_GR, radius=self.RADIUS)
+            self._x1, self._y1 = dial_to_pixel(i / Defaults.MAX_GR, radius=self.RADIUS)
             self._hash_mark_a = Line(
                 self._x0, self._y0, self._x1, self._y1, Palette.CYAN
             )
             self._dial_group.append(self._hash_mark_a)
 
-            self._x0, self._y0 = dial_to_rect(
+            self._x0, self._y0 = dial_to_pixel(
                 (i + Defaults.MAX_GR / 20) / Defaults.MAX_GR,
                 radius=self._outside_radius + self._point_radius,
             )
-            self._x1, self._y1 = dial_to_rect(
+            self._x1, self._y1 = dial_to_pixel(
                 (i + Defaults.MAX_GR / 20) / Defaults.MAX_GR, radius=self.RADIUS
             )
             self._hash_mark_b = Line(
@@ -136,8 +180,8 @@ class Dial:
             self._dial_group.append(self._hash_mark_b)
 
         # Define dial bezel graphic
-        self._sx, self._sy = screen_to_rect(self._center_norm[0], self._center_norm[1])
-        self._ry, self._ry = screen_to_rect(0.00, self._radius_norm)
+        self._sx, self._sy = display_to_pixel(self._center_norm[0], self._center_norm[1])
+        self._ry, self._ry = display_to_pixel(0.00, self._radius_norm)
         self._ry = self._ry + 1
         self.scale_bezel = Circle(
             self._sx,
@@ -219,16 +263,16 @@ class Dial:
             self._hand_2_outline = Palette.GREEN
 
         self._base = self.RADIUS // 10
-        self._sx0, self._sy0 = screen_to_rect(0.00, 0.16)
-        self._sx1, self._sy1 = screen_to_rect(0.00, 0.03)
+        self._sx0, self._sy0 = display_to_pixel(0.00, 0.16)
+        self._sx1, self._sy1 = display_to_pixel(0.00, 0.03)
         self.plate.y = int(
             self._sy0 + (self._sy1 * min(2, max(-2, (pointer_1 + pointer_2))))
         )
         self.riser.y = self.plate.y
 
-        self._x0, self._y0 = dial_to_rect(pointer_2, radius=self.RADIUS)
-        self._x1, self._y1 = dial_to_rect(pointer_2 - 0.25, radius=self._base // 2)
-        self._x2, self._y2 = dial_to_rect(pointer_2 + 0.25, radius=self._base // 2)
+        self._x0, self._y0 = dial_to_pixel(pointer_2, radius=self.RADIUS)
+        self._x1, self._y1 = dial_to_pixel(pointer_2 - 0.25, radius=self._base // 2)
+        self._x2, self._y2 = dial_to_pixel(pointer_2 + 0.25, radius=self._base // 2)
         self.hand_2 = Triangle(
             self._x0,
             self._y0,
@@ -241,9 +285,9 @@ class Dial:
         )
         self._needles_group.append(self.hand_2)
 
-        self._x0, self._y0 = dial_to_rect(pointer_1, radius=self.RADIUS)
-        self._x1, self._y1 = dial_to_rect(pointer_1 - 0.25, radius=self._base // 2)
-        self._x2, self._y2 = dial_to_rect(pointer_1 + 0.25, radius=self._base // 2)
+        self._x0, self._y0 = dial_to_pixel(pointer_1, radius=self.RADIUS)
+        self._x1, self._y1 = dial_to_pixel(pointer_1 - 0.25, radius=self._base // 2)
+        self._x2, self._y2 = dial_to_pixel(pointer_1 + 0.25, radius=self._base // 2)
         self.hand_1 = Triangle(
             self._x0,
             self._y0,
@@ -256,7 +300,7 @@ class Dial:
         )
         self._needles_group.append(self.hand_1)
 
-        self._x0, self._y0 = screen_to_rect(self.center[0], self.center[1])
+        self._x0, self._y0 = display_to_pixel(self.center[0], self.center[1])
         self.pivot = Circle(self._x0, self._y0, self._base // 2, fill=Palette.WHITE)
         self._needles_group.append(self.pivot)
 
@@ -271,13 +315,13 @@ class Dial:
 
 
 
-    def screen_to_rect(self, width_factor=0, height_factor=0):
-        """Convert normalized screen position input (0.0 to 1.0) to the display's
-        rectangular pixel position."""
+    def display_to_pixel(self, width_factor=0, height_factor=0):
+        """Convert normalized display position input (0.0 to 1.0) to the display's
+         pixel position."""
         return int(self.WIDTH * width_factor), int(self.HEIGHT * height_factor)
 
-    def dial_to_rect(self, scale_factor, center=(0.50, 0.50), radius=0.25):
-        """Convert normalized scale_factor input (-1.0 to 1.0) to a rectangular pixel
+    def dial_to_pixel(self, scale_factor, center=(0, 0), radius=0):
+        """Convert normalized scale_factor input (-1.0 to 1.0) to a display pixel
         position on the circumference of a circle with center (x,y pixels) and
         radius (pixels)."""
         self._rads = (-2 * pi) * (scale_factor)  # convert scale_factor to radians
@@ -285,3 +329,8 @@ class Dial:
         x = int(center[0] + (cos(self._rads) * radius))
         y = int(center[1] - (sin(self._rads) * radius))
         return x, y
+
+    def cartesian_object_to_pixel(self, x, y):
+        x1 = x + case._center_norm[0]
+        y1 = 1.0 - (y + case._center_norm[1])
+        return display_to_rect(x1, y1)

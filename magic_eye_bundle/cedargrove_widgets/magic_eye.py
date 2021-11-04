@@ -251,7 +251,7 @@ class MagicEye:
         rectangular pixel position."""
         return int(self.WIDTH * width_factor), int(self.HEIGHT * height_factor)
 
-    def dial_to_rect(self, scale_factor, center=(0.50, 0.50), radius=0.25):
+    def dial_to_rect(self, scale_factor, center=(0, 0), radius=0):
         """Convert normalized scale_factor input (-1.0 to 1.0) to a rectangular pixel
         position on the circumference of a circle with center (x,y pixels) and
         radius (pixels)."""
