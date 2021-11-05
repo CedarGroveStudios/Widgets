@@ -35,12 +35,27 @@ class Palette:
 class Scale:
     def __init__(self, max_scale=100, center=(0.50, 0.50), size=1.0, display_size=(None, None)):
         """Instantiate the scale graphic. Builds a displayio case group."""
+
         """Instantiate the dial graphic for PyPortal devices. Defaults to center
         at 0.5, 0.5 with a radius of 0.25 (normalized display units). Builds a
         displayio dial group.
 
         :param center: The dial center x,y tuple in normalized display units.
         :param radius: The dial radius in normalized display units."""
+
+        """Instantiate the dial graphic for PyPortal devices. Defaults to center
+        at 0.5, 0.5 with a radius of 0.25 (normalized display units).
+        Display size in pixels is specified as an integer tuple. If the
+        display_size tuple is not specified and an integral display is listed
+        in the board class, the display_size tuple will be equal to the
+        integral display width and height.
+        Builds a displayio dial group.
+
+        :param center: The dial center x,y tuple in normalized display units.
+        :param radius: The dial radius in normalized display units.
+        :param display_size: The host display's integer width and height tuple
+        expressed in pixels. If (None, None) and the host includes an integral
+        display, the value is (board.DISPLAY.width, board.DISPLAY.height)."""
 
         # Determine default display size in pixels
         if None in display_size:
@@ -60,7 +75,11 @@ class Scale:
         self._center_norm = center
         self._center = self.cartesian_to_pixel(0,0, self._size)
 
-        self.FONT_0 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
+        if self._size < 0.70:
+            self.FONT_0 = bitmap_font.load_font('/fonts/brutalist-6.bdf')
+        else:
+            #self.FONT_0 = bitmap_font.load_font('/fonts/ter-u12n.bdf')
+            self.FONT_0 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
 
         self._scale_group = displayio.Group()
         self._hands_group = displayio.Group()
@@ -95,7 +114,8 @@ class Scale:
         self._scale_group.append(self._foot)
 
         # Define moveable plate graphic
-        self._sx, self._sy = self.cartesian_to_pixel(-0.05, 0.40, self._size)
+        self._plate_y = 0.40
+        self._sx, self._sy = self.cartesian_to_pixel(-0.05, self._plate_y, self._size)
         self._sw, self._sh = self.display_to_pixel(0.10, 0.40, self._size)
         self.riser = RoundRect(
             self._sx,
@@ -108,7 +128,7 @@ class Scale:
         )
         self._scale_group.append(self.riser)
 
-        self._sx, self._sy = self.cartesian_to_pixel(-0.25, 0.40, self._size)
+        self._sx, self._sy = self.cartesian_to_pixel(-0.25, self._plate_y, self._size)
         self._sw, self._sh = self.display_to_pixel(0.50, 0.08, self._size)
         self.plate = RoundRect(
             self._sx,
@@ -169,7 +189,12 @@ class Scale:
         )
         self._scale_group.append(self._bezel)
 
-        """self.hand_1_alarm = Circle(
+        """# Define alarm points
+        self._point_stroke = 2
+        self._point_diameter = int((Screen.HEIGHT * 0.03) + (2 * self._point_stroke))
+        self._point_radius = self._point_diameter // 2
+
+        self.hand_1_alarm = Circle(
             -50,
             -50,
             self._point_radius,
@@ -231,59 +256,34 @@ class Scale:
         return self.display_to_pixel(x1, y1, 1.0)
 
 
-class Dial:
-    def __init__(self, center=(0.50, 0.50), radius=0.25, display_size=(None, None)):
-        """Instantiate the dial graphic for PyPortal devices. Defaults to center
-        at 0.5, 0.5 with a radius of 0.25 (normalized display units).
-        Display size in pixels is specified as an integer tuple. If the
-        display_size tuple is not specified and an integral display is listed
-        in the board class, the display_size tuple will be equal to the
-        integral display width and height.
-        Builds a displayio dial group.
-
-        :param center: The dial center x,y tuple in normalized display units.
-        :param radius: The dial radius in normalized display units.
-        :param display_size: The host display's integer width and height tuple
-        expressed in pixels. If (None, None) and the host includes an integral
-        display, the value is (board.DISPLAY.width, board.DISPLAY.height)."""
-
-
-        self._point_stroke = 2
-        self._point_diameter = int((Screen.HEIGHT * 0.03) + (2 * self._point_stroke))
-        self._point_radius = self._point_diameter // 2
-
-        return
-
-
-    def plot_needles(self, pointer_1=0, pointer_2=0):
-        """Display channel 1 and 2 indicator needles and move scale plate
+    def plot_hands(self, hand_1=0, hand_2=0):
+        """Display indicator plot_handes and move scale plate
         proportionally. Input is normalized for 0.0 to 1.0 (minimum and maximum
         range), but accepts any floating point value.
 
-        :param pointer_1: The normalized first needle position on the dial circumference.
-        :param pointer_1: The normalized second needle position on the dial circumference."""
+        :param hand_1: The normalized first hand position on the dial circumference.
+        :param hand_1: The normalized second hand position on the dial circumference."""
 
-        if pointer_1 != min(1.0, max(pointer_1, 0.0)):
+        if hand_1 != min(1.0, max(hand_1, 0.0)):
             self._hand_1_outline = Palette.RED
         else:
             self._hand_1_outline = Palette.ORANGE
 
-        if pointer_2 != min(1.0, max(pointer_2, 0.0)):
+        if hand_2 != min(1.0, max(hand_2, 0.0)):
             self._hand_2_outline = Palette.RED
         else:
             self._hand_2_outline = Palette.GREEN
 
-        self._base = self.RADIUS // 10
-        self._sx0, self._sy0 = display_to_pixel(0.00, 0.16)
-        self._sx1, self._sy1 = display_to_pixel(0.00, 0.03)
-        self.plate.y = int(
-            self._sy0 + (self._sy1 * min(2, max(-2, (pointer_1 + pointer_2))))
-        )
+        # Move plate/riser
+        self._plate_disp = self._plate_y - (min(2, max(-2, (hand_1 + hand_2))) * 0.10 / 2)
+        self._x0, self.plate.y = self.cartesian_to_pixel(0.00, self._plate_disp, size=self._size)
         self.riser.y = self.plate.y
 
-        self._x0, self._y0 = dial_to_pixel(pointer_2, radius=self.RADIUS)
-        self._x1, self._y1 = dial_to_pixel(pointer_2 - 0.25, radius=self._base // 2)
-        self._x2, self._y2 = dial_to_pixel(pointer_2 + 0.25, radius=self._base // 2)
+        # Draw hands
+        self._base = self._outside_radius // 16
+        self._x0, self._y0 = self.dial_to_pixel(hand_2, center=self._center, radius=self._outside_radius)
+        self._x1, self._y1 = self.dial_to_pixel(hand_2 - 0.25, center=self._center, radius=self._base)
+        self._x2, self._y2 = self.dial_to_pixel(hand_2 + 0.25, center=self._center, radius=self._base)
         self.hand_2 = Triangle(
             self._x0,
             self._y0,
@@ -294,11 +294,13 @@ class Dial:
             fill=Palette.GREEN,
             outline=self._hand_2_outline,
         )
-        self._needles_group.append(self.hand_2)
+        self._hands_group.append(self.hand_2)
+        if len(self._hands_group) > 2:
+            self._hands_group.remove(self._hands_group[0])
 
-        self._x0, self._y0 = dial_to_pixel(pointer_1, radius=self.RADIUS)
-        self._x1, self._y1 = dial_to_pixel(pointer_1 - 0.25, radius=self._base // 2)
-        self._x2, self._y2 = dial_to_pixel(pointer_1 + 0.25, radius=self._base // 2)
+        self._x0, self._y0 = self.dial_to_pixel(hand_1, center=self._center, radius=self._outside_radius)
+        self._x1, self._y1 = self.dial_to_pixel(hand_1 - 0.25, center=self._center, radius=self._base)
+        self._x2, self._y2 = self.dial_to_pixel(hand_1 + 0.25, center=self._center, radius=self._base)
         self.hand_1 = Triangle(
             self._x0,
             self._y0,
@@ -309,7 +311,9 @@ class Dial:
             fill=Palette.ORANGE,
             outline=self._hand_1_outline,
         )
-        self._needles_group.append(self.hand_1)
+        self._hands_group.append(self.hand_1)
+        if len(self._hands_group) > 2:
+            self._hands_group.remove(self._hands_group[0])
 
         return
 
