@@ -6,6 +6,7 @@
 
 # For host board with integral display
 
+import gc
 import time
 import board
 import random
@@ -28,6 +29,8 @@ tone(board.A0, 880, 0.1)
 
 while True:
     t0 = time.monotonic()
+    gc.collect()
+
     for i in range(0, 200, 5):
         m = i / 100
         magic_eye_1.plot_eye(m)
@@ -35,6 +38,8 @@ while True:
         m = i / 100
         magic_eye_1.plot_eye(m)
     print(f'frame: {(time.monotonic() - t0):5.2f} sec')
+    print(f'free memory: {gc.free_mem()} bytes')
+    
     m0 = 0
     for i in range(0, 100):
         magic_eye_1.plot_eye(random.randrange(0, 120) / 100)

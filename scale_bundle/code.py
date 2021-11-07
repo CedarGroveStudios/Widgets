@@ -38,7 +38,7 @@ tone(board.A0, 880, 0.1)
 while True:
     t0 = time.monotonic()
     gc.collect()
-
+    
     for i in range(0, 125, 1):
         m = i / 100
         scale_2.plot_hands(m, 0)
