@@ -78,7 +78,7 @@ class MagicEye:
         # Create displayio groups
         self._image_group = displayio.Group()  # Primary group for MagicEye class
         self._anode_group = displayio.Group()  # Target anode and wire shadows
-        self._eye_group = displayio.Group()  # Dynamic eye and brow shadow wedge
+        self._eye_group = displayio.Group()  # Dynamic eye and tarsus shadow wedge
         self._bezel_group = displayio.Group()  # Bezel wedges/doughnut and light shield
 
         self._bezel_color = bezel_color  # Set to match background color
@@ -238,8 +238,8 @@ class MagicEye:
         self._w = max(self._x1, self._x2) - self._x
         self._h = abs(self.CENTER[1] + self._outside_radius - self._y) + 1
 
-        self.brow = Rect(self._x, self._y, self._w, self._h, fill=self._eye_color)
-        self._eye_group.append(self.brow)
+        self.tarsus = Rect(self._x, self._y, self._w, self._h, fill=self._eye_color)
+        self._eye_group.append(self.tarsus)
 
         if len(self._eye_group) > 2:
             self._eye_group.remove(self._eye_group[0])
