@@ -24,7 +24,7 @@ display.rotation = 0
 
 display_group = displayio.Group()
 
-scale_1 = Scale(max_scale=100, center=(0.85, 0.30), size=.25)
+scale_1 = Scale(max_scale=100, center=(0.85, 0.30), size=0.15)
 display_group.append(scale_1.display_group)
 
 scale_2 = Scale(center=(0.5, 0.5), size=0.5)
