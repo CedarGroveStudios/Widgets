@@ -4,7 +4,7 @@
 # magic_eye.py
 # 2021-11-02 v0.4
 
-#import board
+# import board
 import displayio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_display_shapes.circle import Circle
@@ -58,7 +58,8 @@ class MagicEye:
         # Determine default display size in pixels
         if None in display_size:
             import board
-            if 'DISPLAY' in dir(board):
+
+            if "DISPLAY" in dir(board):
                 self.WIDTH = board.DISPLAY.width
                 self.HEIGHT = board.DISPLAY.height
             else:
@@ -215,10 +216,14 @@ class MagicEye:
             self._center_norm[0], self._center_norm[1]
         )
         self._x1, self._y1 = self.dial_to_rect(
-            0.35 + (self._eye_value * 0.15), center=self.CENTER, radius=self._outside_radius
+            0.35 + (self._eye_value * 0.15),
+            center=self.CENTER,
+            radius=self._outside_radius,
         )
         self._x2, self._y2 = self.dial_to_rect(
-            0.65 - (self._eye_value * 0.15), center=self.CENTER, radius=self._outside_radius
+            0.65 - (self._eye_value * 0.15),
+            center=self.CENTER,
+            radius=self._outside_radius,
         )
 
         self.eye = Triangle(
