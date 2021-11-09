@@ -57,9 +57,9 @@ class Scale:
             self.HEIGHT = display_size[1]
 
         self._max_scale = max_scale
-
         self._size = size
-        # Define object center relative to normalized display and pixel coordinates
+
+        # Define object center in normalized display and pixel coordinates
         self._center_norm = center
         self._center = self.display_to_pixel(self._center_norm[0], self._center_norm[1])
 
