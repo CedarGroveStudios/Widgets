@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-11-05 v0.4
+# 2021-11-08 v0.5
 
 import displayio
 from math import pi, pow, sin, cos, sqrt
@@ -22,40 +22,24 @@ class Palette:
     BLUE_DK = 0x000080
     GRAY = 0x508080
     GREEN = 0x00FF00
-    MAROON = 0x800000
     ORANGE = 0xFFA500
-    PURPLE = 0x800080
     RED = 0xFF0000
-    RED_DK = 0xA00000
-    YELLOW = 0xFFFF00
-    YELLOW_DK = 0x202000
     WHITE = 0xFFFFFF
 
 
 class Scale:
-    def __init__(self, max_scale=100, center=(0.50, 0.50), size=1.0, display_size=(None, None)):
-        """Instantiate the scale graphic. Builds a displayio case group."""
+    def __init__(self, max_scale=100, center=(0.50, 0.50), size=0.5, display_size=(None, None)):
+        """Instantiate the scale graphic object for DisplayIO devices.
+        Builds a displayio group representing the scale widget.
 
-        """Instantiate the dial graphic for PyPortal devices. Defaults to center
-        at 0.5, 0.5 with a radius of 0.25 (normalized display units). Builds a
-        displayio dial group.
-
+        :param max_scale: The maximum scale integer value. Used to label the
+        ten major dial hash marks.
         :param center: The dial center x,y tuple in normalized display units.
-        :param radius: The dial radius in normalized display units."""
-
-        """Instantiate the dial graphic for PyPortal devices. Defaults to center
-        at 0.5, 0.5 with a radius of 0.25 (normalized display units).
-        Display size in pixels is specified as an integer tuple. If the
-        display_size tuple is not specified and an integral display is listed
-        in the board class, the display_size tuple will be equal to the
-        integral display width and height.
-        Builds a displayio dial group.
-
-        :param center: The dial center x,y tuple in normalized display units.
-        :param radius: The dial radius in normalized display units.
+        :param size: The widget size factor relative to the display's
+        shorter axis.
         :param display_size: The host display's integer width and height tuple
         expressed in pixels. If (None, None) and the host includes an integral
-        display, the value is (board.DISPLAY.width, board.DISPLAY.height)."""
+        display, the tuple value is set to (board.DISPLAY.width, board.DISPLAY.height)."""
 
         # Determine default display size in pixels
         if None in display_size:
@@ -72,10 +56,10 @@ class Scale:
         self._max_scale = max_scale
 
         self._size = size
-        self._center_norm = center
-        self._center = self.cartesian_to_pixel(0,0, self._size)
+        self._center_norm = center  # object center relative to normalized display
+        self._center = self.display_to_pixel(self._center_norm[0], self._center_norm[1])  # object center display pixel position
 
-        if self._size < 0.70:
+        if self._size < 0.50:
             self.FONT_0 = bitmap_font.load_font('/fonts/brutalist-6.bdf')
         else:
             self.FONT_0 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
@@ -85,8 +69,8 @@ class Scale:
         self._pivot_group = displayio.Group()
 
         self._sx0, self._sy0 = self._center
-        self._sx1, self._sy1 = self.cartesian_to_pixel(-0.24, -0.33, self._size)
-        self._sx2, self._sy2 = self.cartesian_to_pixel(0.24, -0.33, self._size)
+        self._sx1, self._sy1 = self.cartesian_to_pixel(-0.49, -0.51, self._size)
+        self._sx2, self._sy2 = self.cartesian_to_pixel(0.49, -0.51, self._size)
         self._base = Triangle(
             self._sx0,
             self._sy0,
@@ -99,23 +83,25 @@ class Scale:
         )
         self._scale_group.append(self._base)
 
-        self._sx, self._sy = self.cartesian_to_pixel(-0.25, -0.32, self._size)
-        self._sw, self._sh = self.display_to_pixel(0.50, 0.08, self._size)
+        self._sx, self._sy = self.cartesian_to_pixel(-0.5, -0.5, self._size)
+        self._sw = self.cartesian_distance_to_pixel(1.0, self._size)
+        self._sh = self.cartesian_distance_to_pixel(0.08, self._size)
         self._foot = RoundRect(
             self._sx,
             self._sy,
             width=self._sw,
             height=self._sh,
-            r=int(5 * self._size),
+            r=int(10 * self._size),
             fill=Palette.GRAY,
             outline=Palette.BLACK,
         )
         self._scale_group.append(self._foot)
 
         # Define moveable plate graphic
-        self._plate_y = 0.40
+        self._plate_y = 0.65
         self._sx, self._sy = self.cartesian_to_pixel(-0.05, self._plate_y, self._size)
-        self._sw, self._sh = self.display_to_pixel(0.10, 0.40, self._size)
+        self._sw = self.cartesian_distance_to_pixel(0.10, self._size)
+        self._sh = self.cartesian_distance_to_pixel(0.20, self._size)
         self.riser = RoundRect(
             self._sx,
             self._sy,
@@ -127,14 +113,15 @@ class Scale:
         )
         self._scale_group.append(self.riser)
 
-        self._sx, self._sy = self.cartesian_to_pixel(-0.25, self._plate_y, self._size)
-        self._sw, self._sh = self.display_to_pixel(0.50, 0.08, self._size)
+        self._sx, self._sy = self.cartesian_to_pixel(-0.5, self._plate_y, self._size)
+        self._sw = self.cartesian_distance_to_pixel(1.0, self._size)
+        self._sh = self.cartesian_distance_to_pixel(0.08, self._size)
         self.plate = RoundRect(
             self._sx,
             self._sy,
             width=self._sw,
             height=self._sh,
-            r=int(5 * self._size),
+            r=int(10 * self._size),
             fill=Palette.GRAY,
             outline=Palette.BLACK,
         )
@@ -142,7 +129,7 @@ class Scale:
 
         # Define primary dial graphic
         self._sx, self._sy = self._center
-        self._outside_radius, self._ry = self.display_to_pixel(0.21, 0.21, self._size)
+        self._outside_radius = self.cartesian_distance_to_pixel(0.5, self._size)
         self._major_radius = int(round(self._outside_radius * 0.88, 0))
         self._minor_radius = int(round(self._outside_radius * 0.93, 0))
         self._label_radius = int(round(self._outside_radius * 0.70, 0))
@@ -229,13 +216,13 @@ class Scale:
 
     @property
     def center(self):
-        """Dial center normalized screen coordinates."""
+        """Normalized display coordinates of object center."""
         return self._center_norm
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display
         pixel position."""
-        return int(round(size * self.WIDTH * width_factor,0)), int(round(size * self.HEIGHT * height_factor, 0))
+        return int(round(size * self.WIDTH * width_factor, 0)), int(round(size * self.HEIGHT * height_factor, 0))
 
     def dial_to_pixel(self, dial_factor, center=(0, 0), radius=0):
         """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel
@@ -248,11 +235,17 @@ class Scale:
         return x, y
 
     def cartesian_to_pixel(self, x, y, size=1.0):
-        """Convert normalized cartesian value (-0.5, to + 0.5) to display
-        pixel position."""
-        x1 = (size * x) + self._center_norm[0]
-        y1 = self._center_norm[1] - (size * y)
-        return self.display_to_pixel(x1, y1, 1.0)
+        """Convert normalized cartesian position value (-0.5, to + 0.5) to display
+        pixels."""
+        self._min_axis = min(self.WIDTH, self.HEIGHT)
+        x1 = int(round(self._min_axis * size * x, 0)) + self._center[0]
+        y1 = self._center[1] - int(round(self._min_axis * size * y, 0))
+        return x1, y1
+
+    def cartesian_distance_to_pixel(self, distance=0, size=1.0):
+        """Convert normalized cartesian distance value to display pixels."""
+        self._min_axis = min(self.WIDTH, self.HEIGHT)
+        return int(round(self._min_axis * size * distance, 0))
 
 
     def plot_hands(self, hand_1=0, hand_2=0):
