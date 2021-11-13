@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # bargraph_7-seg_neopix.py
-# 2021-11-12 v1.0
+# 2021-11-13 v1.0
 
 # For host board with integral display
 
@@ -13,10 +13,11 @@ import board
 import random
 from analogio import AnalogIn
 from simpleio import tone
-import neopixel
+import neopixel as boardneo
 
 from cedargrove_widgets.magic_eye import MagicEye
 from cedargrove_widgets.scale import Scale
+from cedargrove_widgets.neopixel import NeoPixel
 
 from cedargrove_sdcard import SDCard
 
@@ -27,48 +28,8 @@ from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.circle import Circle
 
 sdcard = SDCard()
-pixel = neopixel.NeoPixel(board.NEOPIXEL, 1)
+pixel = boardneo.NeoPixel(board.NEOPIXEL, 1)
 pixel[0] = 0x020102
-
-# NeoPixel widget
-size=1
-neopixel = displayio.Group(scale=size)
-neo_pkg = displayio.Group()
-reflector = displayio.Group()
-
-neopixel_units = 16
-origin = (20, 140)
-
-for chip in range(0, neopixel_units):
-    upper_left_corner = (origin[0] + (15 * chip), origin[1])
-
-    pkg = Rect(upper_left_corner[0], upper_left_corner[1], 15, 15, fill=0x101010)
-    neo_pkg.append(pkg)
-
-    pkg_index = Rect(upper_left_corner[0], 14 + upper_left_corner[1], 1, 1,
-        fill=0x404040)
-    neo_pkg.append(pkg_index)
-
-    reflect_base = Circle(upper_left_corner[0] + 7, upper_left_corner[1] + 7,
-        6, fill=0x404040, outline=None)
-    reflector.append(reflect_base)
-
-neopixel.append(neo_pkg)
-neopixel.append(reflector)
-
-print('len(neopixel)', len(neopixel))
-
-def neopixel_show(n=None, color=0x000000):
-    if n != None:
-        reflector[n].fill = color
-    return
-
-def neopixel_fill(n=None, color=0x000000):
-    if n == None:
-        n = neopixel_units
-    for i in range(0, n):
-        neopixel_show(i, color)
-    return
 
 # HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
 size=2
@@ -183,7 +144,9 @@ magic_eye_1.display_group.append(chips)
 magic_eye_1.display_group.append(bars)
 magic_eye_1.display_group.append(cluster)
 magic_eye_1.display_group.append(digits)
-magic_eye_1.display_group.append(neopixel)
+
+neopixel = NeoPixel(units=16, center=(20,140))
+magic_eye_1.display_group.append(neopixel.display_group)
 
 display.show(magic_eye_1.display_group)
 tone(board.A0, 880, 0.1)
@@ -202,9 +165,9 @@ while True:
         scale.plot_hands(0, m)
     print(f'frame: {(time.monotonic() - t0):5.2f} sec   free memory: {gc.mem_free()} bytes')
 
-    neopixel_fill(color=0xffffff)
+    neopixel.fill(color=0xffffff)
     time.sleep(0.5)
-    neopixel_fill()
+    neopixel.fill()
     time.sleep(0.5)
 
     m0 = 0
@@ -212,7 +175,7 @@ while True:
         magic_eye_1.plot_eye(random.randrange(0, 120) / 100)
         #magic_eye_2.plot_eye(random.randrange(0, 120) / 100)
         scale.plot_hands(random.randrange(0, 75) / 100, random.randrange(25, 50) / 100)
-        neopixel_show(random.randrange(0, neopixel_units), random.randrange(0, 256, 16) +
+        neopixel.show(random.randrange(0, neopixel.units), random.randrange(0, 256, 16) +
             (256 * random.randrange(0, 256, 16)) + (256 * 256 * random.randrange(0, 256, 16)))
 
     sdcard.screenshot()
