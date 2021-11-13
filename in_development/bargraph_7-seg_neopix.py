@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # bargraph_7-seg_neopix.py
-# 2021-11-11 v1.0
+# 2021-11-12 v1.0
 
 # For host board with integral display
 
@@ -30,61 +30,42 @@ sdcard = SDCard()
 pixel = neopixel.NeoPixel(board.NEOPIXEL, 1)
 pixel[0] = 0x020102
 
-# NeoPixel
+# NeoPixel widget
 size=1
-n_pixel = displayio.Group(scale=size)
+neopixel = displayio.Group(scale=size)
+neo_pkg = displayio.Group()
 reflector = displayio.Group()
-cont_chip = displayio.Group()
-red_chip = displayio.Group()
-grn_chip = displayio.Group()
-blu_chip = displayio.Group()
 
-units = 16
+neopixel_units = 16
 origin = (20, 140)
 
-for chip in range(0, units):
+for chip in range(0, neopixel_units):
     upper_left_corner = (origin[0] + (15 * chip), origin[1])
-    pkg_base = Rect(upper_left_corner[0], upper_left_corner[1], 15, 15, fill=0x101010)
-    n_pixel.append(pkg_base)
+
+    pkg = Rect(upper_left_corner[0], upper_left_corner[1], 15, 15, fill=0x101010)
+    neo_pkg.append(pkg)
 
     pkg_index = Rect(upper_left_corner[0], 14 + upper_left_corner[1], 1, 1,
         fill=0x404040)
-    n_pixel.append(pkg_index)
+    neo_pkg.append(pkg_index)
 
     reflect_base = Circle(upper_left_corner[0] + 7, upper_left_corner[1] + 7,
         6, fill=0x404040, outline=None)
     reflector.append(reflect_base)
 
-    controller = Rect(upper_left_corner[0] + 2, upper_left_corner[1] + 7,
-        1, 1, fill=0x000000)
-    cont_chip.append(controller)
+neopixel.append(neo_pkg)
+neopixel.append(reflector)
 
-    red_led = Rect(upper_left_corner[0] + 6, upper_left_corner[1] + 7,
-        1, 1, fill=0x303030)
-    red_chip.append(red_led)
+print('len(neopixel)', len(neopixel))
 
-    grn_led = Rect(upper_left_corner[0] +  9, upper_left_corner[1] + 10,
-        1, 1, fill=0x303030)
-    grn_chip.append(grn_led)
-
-    blu_led = Rect(upper_left_corner[0] +  9, upper_left_corner[1] + 4,
-        1, 1, fill=0x303030)
-    blu_chip.append(blu_led)
-
-n_pixel.append(reflector)
-n_pixel.append(cont_chip)
-n_pixel.append(red_chip)
-n_pixel.append(grn_chip)
-n_pixel.append(blu_chip)
-
-def neopixel_show(n, color=0x000000):
-    reflector[n].fill = color & 0xffffff
-    red_chip[n].fill = color & 0xff0000
-    grn_chip[n].fill = color & 0x00ff00
-    blu_chip[n].fill = color & 0x0000ff
+def neopixel_show(n=None, color=0x000000):
+    if n != None:
+        reflector[n].fill = color
     return
 
-def neopixel_fill(n, color=0x000000):
+def neopixel_fill(n=None, color=0x000000):
+    if n == None:
+        n = neopixel_units
     for i in range(0, n):
         neopixel_show(i, color)
     return
@@ -202,7 +183,7 @@ magic_eye_1.display_group.append(chips)
 magic_eye_1.display_group.append(bars)
 magic_eye_1.display_group.append(cluster)
 magic_eye_1.display_group.append(digits)
-magic_eye_1.display_group.append(n_pixel)
+magic_eye_1.display_group.append(neopixel)
 
 display.show(magic_eye_1.display_group)
 tone(board.A0, 880, 0.1)
@@ -221,14 +202,17 @@ while True:
         scale.plot_hands(0, m)
     print(f'frame: {(time.monotonic() - t0):5.2f} sec   free memory: {gc.mem_free()} bytes')
 
-    neopixel_fill(16)
+    neopixel_fill(color=0xffffff)
+    time.sleep(0.5)
+    neopixel_fill()
+    time.sleep(0.5)
 
     m0 = 0
     for i in range(0, 100):
         magic_eye_1.plot_eye(random.randrange(0, 120) / 100)
         #magic_eye_2.plot_eye(random.randrange(0, 120) / 100)
         scale.plot_hands(random.randrange(0, 75) / 100, random.randrange(25, 50) / 100)
-        neopixel_show(random.randrange(0, 16), random.randrange(0, 256, 16) +
+        neopixel_show(random.randrange(0, neopixel_units), random.randrange(0, 256, 16) +
             (256 * random.randrange(0, 256, 16)) + (256 * 256 * random.randrange(0, 256, 16)))
 
     sdcard.screenshot()
