@@ -1,4 +1,5 @@
 # NeoPixel widget
+# 2021-11-13 v1.0
 
 import displayio
 from adafruit_display_shapes.circle import Circle
@@ -54,19 +55,29 @@ class NeoPixel:
         return self._neopixel_units
 
     #@property
-    #def center(self):
-    #    """Normalized display coordinates of object center."""
-    #    return self._center_norm
+    #def center(self, n=0):
+    #    """Normalized display coordinates of neopixel object center."""
+    #    determine center of neopixel specified by the n parameter
+    #    SHOULD THIS BE A FUNCTION?
+    #    return
+
+    #@centersetter
+    #def center(self, unit, x, y):
+    #    """Set the normalized display coordinates of neopixel object center."""
+    #    procedure for setting all coordinates for a pixel's display elements
+    #    as specified by the n parameter
+    #    SHOULD THIS BE A FUNCTION?
+    #    return
 
     def show(self, n=None, color=0x000000):
+        """Set the color of the nth neopixel."""
         if n != None:
             self._reflector[n].fill = color
         return
 
-    def fill(self, n=None, color=0x000000):
-        if n == None:
-            n = self._neopixel_units
-        for i in range(0, n):
+    def fill(self, color=0x000000):
+        """Fill all neopixels with color."""
+        for i in range(0, self._neopixel_units):
             self.show(i, color)
         return
 
@@ -74,8 +85,7 @@ class NeoPixel:
         """Convert normalized display position input (0.0 to 1.0) to display
         pixel position."""
         return int(round(size * self.WIDTH * width_factor, 0)), int(
-            round(size * self.HEIGHT * height_factor, 0)
-        )
+            round(size * self.HEIGHT * height_factor, 0))
 
     def dial_to_pixel(self, dial_factor, center=(0, 0), radius=0):
         """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel
