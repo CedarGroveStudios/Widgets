@@ -8,14 +8,8 @@ from adafruit_display_shapes.rect import Rect
 class Palette:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
-    CYAN = 0x00FFFF
-    BLUE = 0x0000FF
-    BLUE_DK = 0x000080
     GRAY = 0x508080
-    GREEN = 0x00FF00
-    ORANGE = 0xFFA500
-    RED = 0xFF0000
-    WHITE = 0xFFFFFF
+    GRAY_DK = 0x101010
 
 class NeoPixel:
     def __init__(self, units=0, center=(0, 0), size=1, display_size=(None,None)):
@@ -24,21 +18,21 @@ class NeoPixel:
         self._neo_pkg = displayio.Group()
         self._reflector = displayio.Group()
 
-        self._neopixel_units = 16
-        self._origin = (20, 140)
+        self._neopixel_units = units
+        self._origin = center
 
         for chip in range(0, self._neopixel_units):
             self._upper_left_corner = (self._origin[0] + (15 * chip), self._origin[1])
 
-            self._pkg = Rect(self._upper_left_corner[0], self._upper_left_corner[1], 15, 15, fill=0x101010)
+            self._pkg = Rect(self._upper_left_corner[0], self._upper_left_corner[1], 15, 15, fill=Palette.GRAY_DK)
             self._neo_pkg.append(self._pkg)
 
             self._pkg_index = Rect(self._upper_left_corner[0], 14 + self._upper_left_corner[1], 1, 1,
-                fill=0x404040)
+                fill=Palette.GRAY)
             self._neo_pkg.append(self._pkg_index)
 
             self._reflect_base = Circle(self._upper_left_corner[0] + 7, self._upper_left_corner[1] + 7,
-                6, fill=0x404040, outline=None)
+                6, fill=Palette.GRAY, outline=None)
             self._reflector.append(self._reflect_base)
 
         self._neopixel_group.append(self._neo_pkg)
@@ -69,13 +63,13 @@ class NeoPixel:
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    def show(self, n=None, color=0x000000):
+    def show(self, n=None, color=Palette.BLACK):
         """Set the color of the nth neopixel."""
         if n != None:
             self._reflector[n].fill = color
         return
 
-    def fill(self, color=0x000000):
+    def fill(self, color=Palette.BLACK):
         """Fill all neopixels with color."""
         for i in range(0, self._neopixel_units):
             self.show(i, color)
