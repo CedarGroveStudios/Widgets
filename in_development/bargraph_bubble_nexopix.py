@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# bargraph_7-seg_neopix.py
-# 2021-11-13 v1.0
+# bargraph_bubble_neopix.py
+# 2021-11-14 v1.0
 
 # For host board with integral display
 
@@ -18,7 +18,7 @@ import neopixel as boardneo
 from cedargrove_widgets.magic_eye import MagicEye
 from cedargrove_widgets.scale import Scale
 from cedargrove_widgets.neopixel import NeoPixel
-from cedargrove_widgets.led_cluster import LEDCluster
+from cedargrove_widgets.bubble_display import BubbleDisplay
 
 from cedargrove_sdcard import SDCard
 
@@ -31,9 +31,6 @@ from adafruit_display_shapes.circle import Circle
 sdcard = SDCard()
 pixel = boardneo.NeoPixel(board.NEOPIXEL, 1)
 pixel[0] = 0x020102
-
-
-
 
 # LM3914 Dot/Bar Display Driver (volts; 1.2v full-scale/10 bars)
 # LM3915 (dB; 3dB per step, 30dB range/10 bars)
@@ -86,8 +83,8 @@ test_display_group.append(scale.display_group)
 test_display_group.append(chips)
 test_display_group.append(bars)
 
-led_cluster = LEDCluster(units=4, center=(20, 200))
-test_display_group.append(led_cluster.display_group)
+bubble_display = BubbleDisplay(units=4, center=(20, 200))
+test_display_group.append(bubble_display.display_group)
 
 neopixel = NeoPixel(units=16, center=(20,140))
 test_display_group.append(neopixel.display_group)
