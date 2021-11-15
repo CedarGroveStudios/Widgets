@@ -1,5 +1,5 @@
 # NeoPixel widget
-# 2021-11-13 v1.0
+# 2021-11-14 v1.0
 
 import displayio
 from adafruit_display_shapes.circle import Circle
@@ -32,7 +32,7 @@ class NeoPixel:
             self._neo_pkg.append(self._pkg_index)
 
             self._reflect_base = Circle(self._upper_left_corner[0] + 7, self._upper_left_corner[1] + 7,
-                6, fill=Palette.GRAY, outline=None)
+                6, fill=Palette.BLACK, outline=None)
             self._reflector.append(self._reflect_base)
 
         self._neopixel_group.append(self._neo_pkg)

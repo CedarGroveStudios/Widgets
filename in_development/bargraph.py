@@ -1,89 +1,60 @@
-# LED cluster widget
-# based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-11-13 v1.0
+# 10-Segment Bargraph widget
+# based on the Lucky Light LED 10-Segment LED Gauge Bar and LML391x controllers
+# 2021-11-14 v1.0
 
 import displayio
-from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
-from adafruit_display_shapes.roundrect import RoundRect
+from adafruit_display_shapes.triangle import Triangle
+
 
 class Palette:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
+    GRAY_DK = 0x101010
+    GREEN_DK = 0x00A000
     RED = 0xFF0000
-    RED_PKG = 0x801010
-    RED_BKG = 0x601010
-    RED_LENS = 0xa01010
+    YELLOW = 0xFFFF00
 
-class LEDCluster:
-    def __init__(self, units=0, center=(0, 0), size=1, display_size=(None,None)):
-        self._size = size
-        self._cluster_group = displayio.Group(scale=self._size)
-        self._cluster = displayio.Group(scale=size)
-        self._digits = displayio.Group(scale=size)
+
+class Bargraph:
+    def __init__(self, units=0, center=(0, 0), size=1, range='VU', mode='BAR', display_size=(None,None)):
+        """LM3914 Dot/Bar Display Driver (volts; 1.2v full-scale/10 bars)
+        LM3915 (dB; 3dB per step, 30dB range/10 bars)
+        LM3916 (VU; 10v full-scale; -20, -10, -7, -5, -3, -1, 0, +1, +2, +3dB)
+            ( -40, -37, -34, -31, -28, -25, -22, -19, -16, -13, -10, -7, -5, -3, -1, 0, +1, +2, +3dB)
+        dot or bar mode; slight glow of surrounding dots in dot mode"""
 
         self._units = units
         self._origin = center
+        self._size = size
+        self._range = range
+        self._mode = mode
+
+        self._bargraph_group = displayio.Group(scale=self._size)
+        self._chips = displayio.Group()
+        self._bars = displayio.Group()
 
         for chip in range(0, self._units):
-            self._upper_left_corner = (self._origin[0] + (60 * chip), self._origin[1])
-            self._dip_package = Rect(self._upper_left_corner[0], self._upper_left_corner[1], 60, 25, fill=Palette.RED_PKG)
-            self._cluster.append(self._dip_package)
-            self._dip_index = Rect(2 + self._upper_left_corner[0], 24 + self._upper_left_corner[1], 2, 2,
+            self._upper_left_corner = (self._origin[0] + (100 * chip), self._origin[1])
+            self._dip_package = Rect(self._upper_left_corner[0], self._upper_left_corner[1], 100, 40, fill=Palette.GRAY_DK)
+            self._chips.append(self._dip_package)
+            self._dip_index = Triangle(self._upper_left_corner[0], 39 + self._upper_left_corner[1],
+                self._upper_left_corner[0], 35 + self._upper_left_corner[1],
+                4 + self._upper_left_corner[0], 39 + self._upper_left_corner[1],
                 fill=Palette.BLACK)
-            self._cluster.append(self._dip_index)
-            for i in range(0, 4):
-                self._lens = RoundRect(self._upper_left_corner[0] + (i * 15), 0 + self._upper_left_corner[1],
-                    15, 25, 7, fill=Palette.RED_BKG, outline=Palette.RED_LENS)
-                self._cluster.append(self._lens)
-
-                self._a = Line(4 + self._upper_left_corner[0] + (i * 15) + 1, 6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 + 1, 6 + self._upper_left_corner[1],
-                    color=Palette.RED)
-                self._digits.append(self._a)
-
-                self._g = Line(4 + self._upper_left_corner[0] + (i * 15), 12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6, 12 + self._upper_left_corner[1],
-                    color=Palette.RED)
-                self._digits.append(self._g)
-
-                self._d = Line(4 + self._upper_left_corner[0] + (i * 15) - 1, 18 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1, 18 + self._upper_left_corner[1],
-                    color=Palette.RED)
-                self._digits.append(self._d)
-
-                self._b = Line(4 + self._upper_left_corner[0] + (i * 15) + 6 + 1, 6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6, 12 + self._upper_left_corner[1],
-                    color=Palette.RED)
-                self._digits.append(self._b)
-
-                self._c = Line(4 + self._upper_left_corner[0] + (i * 15) + 6, 12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1, 18 + self._upper_left_corner[1],
-                    color=Palette.RED)
-                self._digits.append(self._c)
-
-                self._f = Line(4 + self._upper_left_corner[0] + (i * 15) + 1, 6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15), 12 + self._upper_left_corner[1],
-                    color=Palette.RED)
-                self._digits.append(self._f)
-
-                self._e = Line(4 + self._upper_left_corner[0] + (i * 15), 12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) - 1, 18 + self._upper_left_corner[1],
-                    color=Palette.RED)
-                self._digits.append(self._e)
-
-                self._dp = Rect(4 + self._upper_left_corner[0] + (i * 15) + 6 + 1, 18 + self._upper_left_corner[1],
-                    2, 2, fill=Palette.RED)
-                self._digits.append(self._dp)
-
-        self._cluster_group.append(self._cluster)
-        self._cluster_group.append(self._digits)
+            self._chips.append(self._dip_index)
+            for i in range(0, 10):
+                self._bar = Rect(self._upper_left_corner[0] + 2 + (i * 10), 10 + self._upper_left_corner[1],
+                    6, 20, fill=Palette.BLACK, outline=None)
+                self._bars.append(self._bar)
+        self._bargraph_group.append(self._chips)
+        self._bargraph_group.append(self._bars)
         return
 
     @property
     def display_group(self):
-        """Displayio cluster group."""
-        return self._cluster_group
+        """Displayio bargraph group."""
+        return self._bargraph_group
 
     @property
     def units(self):
@@ -104,6 +75,21 @@ class LEDCluster:
     #    as specified by the cluster parameter
     #    SHOULD THIS BE A FUNCTION?
     #    return
+
+    def show(self, signal=None):
+        self._signal = signal
+        self._bar = int(round(self._signal * (self._units * 10), 0))
+        for i in range(0, self._units * 10):
+            if i <= self._bar and self._range == 'VU':
+                if i > ((self._units - 1) * 10) + 6:
+                    self._bars[i].fill=Palette.RED
+                elif i == ((self._units - 1) * 10) + 6:
+                    self._bars[i].fill=Palette.YELLOW
+                else:
+                    self._bars[i].fill=Palette.GREEN_DK
+            else:
+                self._bars[i].fill=Palette.BLACK
+        return
 
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
