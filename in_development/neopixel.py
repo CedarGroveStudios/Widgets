@@ -1,5 +1,5 @@
 # NeoPixel widget
-# 2021-11-14 v1.0
+# 2021-11-16 v1.0
 
 import displayio
 from adafruit_display_shapes.circle import Circle
@@ -55,11 +55,16 @@ class NeoPixel:
 
         self._neopixel_group.append(self._neo_pkg)
         self._neopixel_group.append(self._reflector)
+        return
 
     @property
     def display_group(self):
         """Displayio neopixel group."""
         return self._neopixel_group
+
+    @property
+    def neo_group(self):
+        return self._reflector
 
     @property
     def units(self):
