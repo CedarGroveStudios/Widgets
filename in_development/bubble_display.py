@@ -7,16 +7,18 @@ from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 
+
 class Palette:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     RED = 0xFF0000
     RED_PKG = 0x801010
     RED_BKG = 0x601010
-    RED_LENS = 0xa01010
+    RED_LENS = 0xA01010
+
 
 class BubbleDisplay:
-    def __init__(self, units=0, center=(0, 0), size=1, display_size=(None,None)):
+    def __init__(self, units=0, center=(0, 0), size=1, display_size=(None, None)):
         self._size = size
         self._cluster_group = displayio.Group(scale=self._size)
         self._cluster = displayio.Group(scale=size)
@@ -27,53 +29,104 @@ class BubbleDisplay:
 
         for chip in range(0, self._units):
             self._upper_left_corner = (self._origin[0] + (60 * chip), self._origin[1])
-            self._dip_package = Rect(self._upper_left_corner[0], self._upper_left_corner[1], 60, 25, fill=Palette.RED_PKG)
+            self._dip_package = Rect(
+                self._upper_left_corner[0],
+                self._upper_left_corner[1],
+                60,
+                25,
+                fill=Palette.RED_PKG,
+            )
             self._cluster.append(self._dip_package)
-            self._dip_index = Rect(2 + self._upper_left_corner[0], 24 + self._upper_left_corner[1], 2, 2,
-                fill=Palette.BLACK)
+            self._dip_index = Rect(
+                2 + self._upper_left_corner[0],
+                24 + self._upper_left_corner[1],
+                2,
+                2,
+                fill=Palette.BLACK,
+            )
             self._cluster.append(self._dip_index)
             for i in range(0, 4):
-                self._lens = RoundRect(self._upper_left_corner[0] + (i * 15), 0 + self._upper_left_corner[1],
-                    15, 25, 7, fill=Palette.RED_BKG, outline=Palette.RED_LENS)
+                self._lens = RoundRect(
+                    self._upper_left_corner[0] + (i * 15),
+                    0 + self._upper_left_corner[1],
+                    15,
+                    25,
+                    7,
+                    fill=Palette.RED_BKG,
+                    outline=Palette.RED_LENS,
+                )
                 self._cluster.append(self._lens)
 
-                self._a = Line(4 + self._upper_left_corner[0] + (i * 15) + 1, 6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 + 1, 6 + self._upper_left_corner[1],
-                    color=Palette.RED)
+                self._a = Line(
+                    4 + self._upper_left_corner[0] + (i * 15) + 1,
+                    6 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
+                    6 + self._upper_left_corner[1],
+                    color=Palette.RED,
+                )
                 self._digits.append(self._a)
 
-                self._g = Line(4 + self._upper_left_corner[0] + (i * 15), 12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6, 12 + self._upper_left_corner[1],
-                    color=Palette.RED)
+                self._g = Line(
+                    4 + self._upper_left_corner[0] + (i * 15),
+                    12 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15) + 6,
+                    12 + self._upper_left_corner[1],
+                    color=Palette.RED,
+                )
                 self._digits.append(self._g)
 
-                self._d = Line(4 + self._upper_left_corner[0] + (i * 15) - 1, 18 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1, 18 + self._upper_left_corner[1],
-                    color=Palette.RED)
+                self._d = Line(
+                    4 + self._upper_left_corner[0] + (i * 15) - 1,
+                    18 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
+                    18 + self._upper_left_corner[1],
+                    color=Palette.RED,
+                )
                 self._digits.append(self._d)
 
-                self._b = Line(4 + self._upper_left_corner[0] + (i * 15) + 6 + 1, 6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6, 12 + self._upper_left_corner[1],
-                    color=Palette.RED)
+                self._b = Line(
+                    4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
+                    6 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15) + 6,
+                    12 + self._upper_left_corner[1],
+                    color=Palette.RED,
+                )
                 self._digits.append(self._b)
 
-                self._c = Line(4 + self._upper_left_corner[0] + (i * 15) + 6, 12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1, 18 + self._upper_left_corner[1],
-                    color=Palette.RED)
+                self._c = Line(
+                    4 + self._upper_left_corner[0] + (i * 15) + 6,
+                    12 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
+                    18 + self._upper_left_corner[1],
+                    color=Palette.RED,
+                )
                 self._digits.append(self._c)
 
-                self._f = Line(4 + self._upper_left_corner[0] + (i * 15) + 1, 6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15), 12 + self._upper_left_corner[1],
-                    color=Palette.RED)
+                self._f = Line(
+                    4 + self._upper_left_corner[0] + (i * 15) + 1,
+                    6 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15),
+                    12 + self._upper_left_corner[1],
+                    color=Palette.RED,
+                )
                 self._digits.append(self._f)
 
-                self._e = Line(4 + self._upper_left_corner[0] + (i * 15), 12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) - 1, 18 + self._upper_left_corner[1],
-                    color=Palette.RED)
+                self._e = Line(
+                    4 + self._upper_left_corner[0] + (i * 15),
+                    12 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15) - 1,
+                    18 + self._upper_left_corner[1],
+                    color=Palette.RED,
+                )
                 self._digits.append(self._e)
 
-                self._dp = Rect(4 + self._upper_left_corner[0] + (i * 15) + 6 + 1, 18 + self._upper_left_corner[1],
-                    2, 2, fill=Palette.RED)
+                self._dp = Rect(
+                    4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
+                    18 + self._upper_left_corner[1],
+                    2,
+                    2,
+                    fill=Palette.RED,
+                )
                 self._digits.append(self._dp)
 
         self._cluster_group.append(self._cluster)
@@ -90,27 +143,27 @@ class BubbleDisplay:
         """Number of units."""
         return self._units
 
-    #@property
-    #def center(self, cluster=0):
+    # @property
+    # def center(self, cluster=0):
     #    """Normalized display coordinates of the object center."""
     #    determine center of cluster specified by the cluster parameter
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    #@centersetter
-    #def center(self, cluster=0, x, y):
+    # @centersetter
+    # def center(self, cluster=0, x, y):
     #    """Set the normalized display coordinates of the object center."""
     #    procedure for setting all coordinates for a cluster
     #    as specified by the cluster parameter
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display
         pixel position."""
         return int(round(size * self.WIDTH * width_factor, 0)), int(
-            round(size * self.HEIGHT * height_factor, 0))
+            round(size * self.HEIGHT * height_factor, 0)
+        )
 
     def dial_to_pixel(self, dial_factor, center=(0, 0), radius=0):
         """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel

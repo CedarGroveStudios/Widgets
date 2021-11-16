@@ -32,28 +32,28 @@ tone(board.A0, 440, 0.1)
 test_display_group = displayio.Group()
 
 display = board.DISPLAY
-display.brightness = 0.95
+display.brightness = 0.75
 display.rotation = 0
 
-magic_eye_1 = MagicEye((0.75, 0.75), size=0.3)
+magic_eye_1 = MagicEye((0.80, 0.75), size=0.3)
 test_display_group.append(magic_eye_1.display_group)
 
-#magic_eye_2 = MagicEye((0.25, 0.25), size=0.20)
-#test_display_group.display_group.append(magic_eye_2.display_group)
+# magic_eye_2 = MagicEye((0.25, 0.25), size=0.20)
+# test_display_group.display_group.append(magic_eye_2.display_group)
 
-scale = Scale(max_scale=100, center=(0.75, 0.25), size=0.3)
+scale = Scale(max_scale=100, center=(0.80, 0.25), size=0.3)
 test_display_group.append(scale.display_group)
 
-bargraph_1 = Bargraph(units=2, center=(20, 10), mode='VU')
+bargraph_1 = Bargraph(units=2, center=(10, 10), mode="VU")
 test_display_group.append(bargraph_1.display_group)
 
-bargraph_2 = Bargraph(units=2, center=(20, 55), mode='VU')
+bargraph_2 = Bargraph(units=2, center=(10, 55), mode="VU")
 test_display_group.append(bargraph_2.display_group)
 
-bubble_display = BubbleDisplay(units=4, center=(20, 200))
+bubble_display = BubbleDisplay(units=3, center=(10, 200))
 test_display_group.append(bubble_display.display_group)
 
-neopixel = NeoPixel(units=16, center=(20, 140))
+neopixel = NeoPixel(units=12, center=(10, 140))
 test_display_group.append(neopixel.display_group)
 
 display.show(test_display_group)
@@ -71,9 +71,11 @@ while True:
         m = i / 100
         magic_eye_1.plot_eye(m)
         scale.plot_hands(0, m)
-    print(f'frame: {(time.monotonic() - t0):5.2f} sec   free memory: {gc.mem_free()} bytes')
+    print(
+        f"frame: {(time.monotonic() - t0):5.2f} sec   free memory: {gc.mem_free()} bytes"
+    )
 
-    neopixel.fill(color=0xffffff)
+    neopixel.fill(color=0xFFFFFF)
     time.sleep(0.5)
     neopixel.fill()
     time.sleep(0.5)
@@ -81,10 +83,14 @@ while True:
     m0 = 0
     for i in range(0, 100):
         magic_eye_1.plot_eye(random.randrange(0, 120) / 100)
-        #magic_eye_2.plot_eye(random.randrange(0, 120) / 100)
+        # magic_eye_2.plot_eye(random.randrange(0, 120) / 100)
         scale.plot_hands(random.randrange(0, 75) / 100, random.randrange(25, 50) / 100)
-        neopixel.show(random.randrange(0, neopixel.units), random.randrange(0, 256, 16) +
-            (256 * random.randrange(0, 256, 16)) + (256 * 256 * random.randrange(0, 256, 16)))
+        neopixel.show(
+            random.randrange(0, neopixel.units),
+            random.randrange(0, 256, 16)
+            + (256 * random.randrange(0, 256, 16))
+            + (256 * 256 * random.randrange(0, 256, 16)),
+        )
 
         left_level = random.randrange(50, 100) / 100
         right_level = min(left_level + (random.randrange(-25, 25) / 100), 1.0)

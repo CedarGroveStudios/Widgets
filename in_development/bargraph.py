@@ -10,14 +10,23 @@ from adafruit_display_shapes.triangle import Triangle
 class Palette:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
-    GRAY_DK = 0x101010
+    GRAY = 0x508080
+    GRAY_DK = 0x404040
     GREEN_DK = 0x00A000
     RED = 0xFF0000
     YELLOW = 0xFFFF00
 
 
 class Bargraph:
-    def __init__(self, units=0, center=(0, 0), size=1, range='VU', mode='BAR', display_size=(None,None)):
+    def __init__(
+        self,
+        units=0,
+        center=(0, 0),
+        size=1,
+        range="VU",
+        mode="BAR",
+        display_size=(None, None),
+    ):
         """LM3914 Dot/Bar Display Driver (volts; 1.2v full-scale/10 bars)
         LM3915 (dB; 3dB per step, 30dB range/10 bars)
         LM3916 (VU; 10v full-scale; -20, -10, -7, -5, -3, -1, 0, +1, +2, +3dB)
@@ -36,16 +45,33 @@ class Bargraph:
 
         for chip in range(0, self._units):
             self._upper_left_corner = (self._origin[0] + (100 * chip), self._origin[1])
-            self._dip_package = Rect(self._upper_left_corner[0], self._upper_left_corner[1], 100, 40, fill=Palette.GRAY_DK)
+            self._dip_package = Rect(
+                self._upper_left_corner[0],
+                self._upper_left_corner[1],
+                100,
+                40,
+                fill=Palette.GRAY_DK,
+            )
             self._chips.append(self._dip_package)
-            self._dip_index = Triangle(self._upper_left_corner[0], 39 + self._upper_left_corner[1],
-                self._upper_left_corner[0], 35 + self._upper_left_corner[1],
-                4 + self._upper_left_corner[0], 39 + self._upper_left_corner[1],
-                fill=Palette.BLACK)
+            self._dip_index = Triangle(
+                self._upper_left_corner[0],
+                39 + self._upper_left_corner[1],
+                self._upper_left_corner[0],
+                35 + self._upper_left_corner[1],
+                4 + self._upper_left_corner[0],
+                39 + self._upper_left_corner[1],
+                fill=Palette.BLACK,
+            )
             self._chips.append(self._dip_index)
             for i in range(0, 10):
-                self._bar = Rect(self._upper_left_corner[0] + 2 + (i * 10), 10 + self._upper_left_corner[1],
-                    6, 20, fill=Palette.BLACK, outline=None)
+                self._bar = Rect(
+                    self._upper_left_corner[0] + 2 + (i * 10),
+                    10 + self._upper_left_corner[1],
+                    6,
+                    20,
+                    fill=Palette.BLACK,
+                    outline=None,
+                )
                 self._bars.append(self._bar)
         self._bargraph_group.append(self._chips)
         self._bargraph_group.append(self._bars)
@@ -61,15 +87,15 @@ class Bargraph:
         """Number of units."""
         return self._units
 
-    #@property
-    #def center(self, cluster=0):
+    # @property
+    # def center(self, cluster=0):
     #    """Normalized display coordinates of the object center."""
     #    determine center of cluster specified by the cluster parameter
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    #@centersetter
-    #def center(self, cluster=0, x, y):
+    # @centersetter
+    # def center(self, cluster=0, x, y):
     #    """Set the normalized display coordinates of the object center."""
     #    procedure for setting all coordinates for a cluster
     #    as specified by the cluster parameter
@@ -80,23 +106,23 @@ class Bargraph:
         self._signal = signal
         self._bar = int(round(self._signal * (self._units * 10), 0))
         for i in range(0, self._units * 10):
-            if i <= self._bar and self._range == 'VU':
+            if i <= self._bar and self._range == "VU":
                 if i > ((self._units - 1) * 10) + 6:
-                    self._bars[i].fill=Palette.RED
+                    self._bars[i].fill = Palette.RED
                 elif i == ((self._units - 1) * 10) + 6:
-                    self._bars[i].fill=Palette.YELLOW
+                    self._bars[i].fill = Palette.YELLOW
                 else:
-                    self._bars[i].fill=Palette.GREEN_DK
+                    self._bars[i].fill = Palette.GREEN_DK
             else:
-                self._bars[i].fill=Palette.BLACK
+                self._bars[i].fill = Palette.BLACK
         return
-
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display
         pixel position."""
         return int(round(size * self.WIDTH * width_factor, 0)), int(
-            round(size * self.HEIGHT * height_factor, 0))
+            round(size * self.HEIGHT * height_factor, 0)
+        )
 
     def dial_to_pixel(self, dial_factor, center=(0, 0), radius=0):
         """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel

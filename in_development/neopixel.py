@@ -5,14 +5,16 @@ import displayio
 from adafruit_display_shapes.circle import Circle
 from adafruit_display_shapes.rect import Rect
 
+
 class Palette:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     GRAY = 0x508080
     GRAY_DK = 0x101010
 
+
 class NeoPixel:
-    def __init__(self, units=0, center=(0, 0), size=1, display_size=(None,None)):
+    def __init__(self, units=0, center=(0, 0), size=1, display_size=(None, None)):
         self._size = size
         self._neopixel_group = displayio.Group(scale=self._size)
         self._neo_pkg = displayio.Group()
@@ -24,15 +26,31 @@ class NeoPixel:
         for chip in range(0, self._neopixel_units):
             self._upper_left_corner = (self._origin[0] + (15 * chip), self._origin[1])
 
-            self._pkg = Rect(self._upper_left_corner[0], self._upper_left_corner[1], 15, 15, fill=Palette.GRAY_DK)
+            self._pkg = Rect(
+                self._upper_left_corner[0],
+                self._upper_left_corner[1],
+                15,
+                15,
+                fill=Palette.GRAY_DK,
+            )
             self._neo_pkg.append(self._pkg)
 
-            self._pkg_index = Rect(self._upper_left_corner[0], 14 + self._upper_left_corner[1], 1, 1,
-                fill=Palette.GRAY)
+            self._pkg_index = Rect(
+                self._upper_left_corner[0],
+                14 + self._upper_left_corner[1],
+                1,
+                1,
+                fill=Palette.GRAY,
+            )
             self._neo_pkg.append(self._pkg_index)
 
-            self._reflect_base = Circle(self._upper_left_corner[0] + 7, self._upper_left_corner[1] + 7,
-                6, fill=Palette.BLACK, outline=None)
+            self._reflect_base = Circle(
+                self._upper_left_corner[0] + 7,
+                self._upper_left_corner[1] + 7,
+                6,
+                fill=Palette.BLACK,
+                outline=None,
+            )
             self._reflector.append(self._reflect_base)
 
         self._neopixel_group.append(self._neo_pkg)
@@ -48,15 +66,15 @@ class NeoPixel:
         """Number of NeoPixel units."""
         return self._neopixel_units
 
-    #@property
-    #def center(self, n=0):
+    # @property
+    # def center(self, n=0):
     #    """Normalized display coordinates of neopixel object center."""
     #    determine center of neopixel specified by the n parameter
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    #@centersetter
-    #def center(self, unit, x, y):
+    # @centersetter
+    # def center(self, unit, x, y):
     #    """Set the normalized display coordinates of neopixel object center."""
     #    procedure for setting all coordinates for a pixel's display elements
     #    as specified by the n parameter
@@ -79,7 +97,8 @@ class NeoPixel:
         """Convert normalized display position input (0.0 to 1.0) to display
         pixel position."""
         return int(round(size * self.WIDTH * width_factor, 0)), int(
-            round(size * self.HEIGHT * height_factor, 0))
+            round(size * self.HEIGHT * height_factor, 0)
+        )
 
     def dial_to_pixel(self, dial_factor, center=(0, 0), radius=0):
         """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel

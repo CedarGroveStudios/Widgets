@@ -43,7 +43,8 @@ class Dial:
         # Determine default display size in pixels
         if None in display_size:
             import board
-            if 'DISPLAY' in dir(board):
+
+            if "DISPLAY" in dir(board):
                 self.WIDTH = board.DISPLAY.width
                 self.HEIGHT = board.DISPLAY.height
             else:
@@ -267,9 +268,6 @@ class Dial:
         self._needles_group.remove(self._needles_group[len(self._needles_group) - 1])
         self._needles_group.remove(self._needles_group[len(self._needles_group) - 1])
         return
-
-
-
 
     def screen_to_rect(self, width_factor=0, height_factor=0):
         """Convert normalized screen position input (0.0 to 1.0) to the display's
