@@ -7,14 +7,37 @@ from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 
+# 8-bit to 7 segment; dp g f e d c b a
+NUMBERS = [
+    0b00111111,  # 0
+    0b00000110,  # 1
+    0b01011011,  # 2
+    0b01001111,  # 3
+    0b01100110,  # 4
+    0b01101101,  # 5
+    0b01111101,  # 6
+    0b00000111,  # 7
+    0b01111111,  # 8
+    0b01101111,  # 9
+    0b01110111,  # a
+    0b01111100,  # b
+    0b00111001,  # C
+    0b01011110,  # d
+    0b01111001,  # E
+    0b01110001,  # F
+    0b01000000,  # -
+    0b10000000,  # .
+    0b00000000,  # <space>
+]
+
 
 class Palette:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     RED = 0xFF0000
-    RED_PKG = 0x801010
-    RED_BKG = 0x601010
-    RED_LENS = 0xA01010
+    RED_PKG = 0x701010
+    RED_BKG = 0x501010
+    RED_LENS = 0x901010
 
 
 class BubbleDisplay:
@@ -37,6 +60,7 @@ class BubbleDisplay:
                 fill=Palette.RED_PKG,
             )
             self._cluster.append(self._dip_package)
+
             self._dip_index = Rect(
                 2 + self._upper_left_corner[0],
                 24 + self._upper_left_corner[1],
@@ -45,6 +69,7 @@ class BubbleDisplay:
                 fill=Palette.BLACK,
             )
             self._cluster.append(self._dip_index)
+
             for i in range(0, 4):
                 self._lens = RoundRect(
                     self._upper_left_corner[0] + (i * 15),
@@ -62,34 +87,16 @@ class BubbleDisplay:
                     6 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
                     6 + self._upper_left_corner[1],
-                    color=Palette.RED,
+                    color=Palette.RED_BKG,
                 )
                 self._digits.append(self._a)
-
-                self._g = Line(
-                    4 + self._upper_left_corner[0] + (i * 15),
-                    12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6,
-                    12 + self._upper_left_corner[1],
-                    color=Palette.RED,
-                )
-                self._digits.append(self._g)
-
-                self._d = Line(
-                    4 + self._upper_left_corner[0] + (i * 15) - 1,
-                    18 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
-                    18 + self._upper_left_corner[1],
-                    color=Palette.RED,
-                )
-                self._digits.append(self._d)
 
                 self._b = Line(
                     4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
                     6 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) + 6,
                     12 + self._upper_left_corner[1],
-                    color=Palette.RED,
+                    color=Palette.RED_BKG,
                 )
                 self._digits.append(self._b)
 
@@ -98,34 +105,52 @@ class BubbleDisplay:
                     12 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
                     18 + self._upper_left_corner[1],
-                    color=Palette.RED,
+                    color=Palette.RED_BKG,
                 )
                 self._digits.append(self._c)
 
-                self._f = Line(
-                    4 + self._upper_left_corner[0] + (i * 15) + 1,
-                    6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15),
-                    12 + self._upper_left_corner[1],
-                    color=Palette.RED,
+                self._d = Line(
+                    4 + self._upper_left_corner[0] + (i * 15) - 1,
+                    18 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
+                    18 + self._upper_left_corner[1],
+                    color=Palette.RED_BKG,
                 )
-                self._digits.append(self._f)
+                self._digits.append(self._d)
 
                 self._e = Line(
                     4 + self._upper_left_corner[0] + (i * 15),
                     12 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) - 1,
                     18 + self._upper_left_corner[1],
-                    color=Palette.RED,
+                    color=Palette.RED_BKG,
                 )
                 self._digits.append(self._e)
+
+                self._f = Line(
+                    4 + self._upper_left_corner[0] + (i * 15) + 1,
+                    6 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15),
+                    12 + self._upper_left_corner[1],
+                    color=Palette.RED_BKG,
+                )
+                self._digits.append(self._f)
+
+                self._g = Line(
+                    4 + self._upper_left_corner[0] + (i * 15),
+                    12 + self._upper_left_corner[1],
+                    4 + self._upper_left_corner[0] + (i * 15) + 6,
+                    12 + self._upper_left_corner[1],
+                    color=Palette.RED_BKG,
+                )
+                self._digits.append(self._g)
 
                 self._dp = Rect(
                     4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
                     18 + self._upper_left_corner[1],
                     2,
                     2,
-                    fill=Palette.RED,
+                    fill=Palette.RED_BKG,
                 )
                 self._digits.append(self._dp)
 
@@ -157,6 +182,30 @@ class BubbleDisplay:
     #    as specified by the cluster parameter
     #    SHOULD THIS BE A FUNCTION?
     #    return
+
+
+    def show(self, display=''):
+        self._disp = display
+        """for digit in range(0, len(self._disp)):
+            print('digit, value', digit, self._disp[digit])"""
+        return
+
+    def _build_digit(self, display=''):
+        for chip in range(0, self._units):
+            for digit in range(0, 4):
+                number = (chip * 4) + digit
+                bits = NUMBERS[number]
+
+                #print('(chip * 32) + (digit * 8)', (chip * self._units) + (digit * 4))
+                seg_a_index = (chip * 32) + (digit * 8)
+                for segment in range(0, 8):
+                    if bits & pow(2, segment):
+                        self._digits[seg_a_index + segment].outline = Palette.RED
+                    else:
+                        self._digits[seg_a_index + segment].outline = Palette.RED_BKG
+
+        return
+
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display

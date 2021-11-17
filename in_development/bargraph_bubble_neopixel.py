@@ -25,6 +25,7 @@ from cedargrove_sdcard import SDCard
 
 sdcard = SDCard()
 pixel = boardneo.NeoPixel(board.NEOPIXEL, 1)
+pixel.brightness = 0.5
 pixel[0] = 0x020102
 
 tone(board.A0, 440, 0.1)
@@ -35,13 +36,13 @@ display = board.DISPLAY
 display.brightness = 0.75
 display.rotation = 0
 
-magic_eye_1 = MagicEye((0.80, 0.75), size=0.3)
+magic_eye_1 = MagicEye((0.85, 0.65), size=0.25)
 test_display_group.append(magic_eye_1.display_group)
 
 # magic_eye_2 = MagicEye((0.25, 0.25), size=0.20)
 # test_display_group.display_group.append(magic_eye_2.display_group)
 
-scale = Scale(max_scale=100, center=(0.80, 0.25), size=0.3)
+scale = Scale(max_scale=100, center=(0.85, 0.25), size=0.25)
 test_display_group.append(scale.display_group)
 
 bargraph_1 = Bargraph(units=2, center=(10, 10), mode="VU")
@@ -50,11 +51,17 @@ test_display_group.append(bargraph_1.display_group)
 bargraph_2 = Bargraph(units=2, center=(10, 55), mode="VU")
 test_display_group.append(bargraph_2.display_group)
 
-bubble_display = BubbleDisplay(units=3, center=(10, 200))
+bubble_display = BubbleDisplay(units=4, center=(10, 200))
 test_display_group.append(bubble_display.display_group)
 
-neopixel = NeoPixel(units=12, center=(10, 140))
+bubble_display._build_digit()
+
+neopixel = NeoPixel(units=14, center=(10, 140))
 test_display_group.append(neopixel.display_group)
+
+neo = neopixel.neo_group
+
+neo[2].fill = 0xf040f0
 
 display.show(test_display_group)
 tone(board.A0, 880, 0.1)
@@ -96,6 +103,8 @@ while True:
         right_level = min(left_level + (random.randrange(-25, 25) / 100), 1.0)
         bargraph_1.show(left_level)
         bargraph_2.show(right_level)
+
+        bubble_display.show('012345')
 
     gc.collect()
     sdcard.screenshot()
