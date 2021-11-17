@@ -9,7 +9,7 @@
 Various common shapes for use with displayio - Line shape!
 
 
-* Author(s): Melissa LeBlanc-Williams, Jan Goolsbey
+* Author(s): Melissa LeBlanc-Williams
 
 Implementation Notes
 --------------------
@@ -40,14 +40,15 @@ class Line(Polygon):
 
     def __init__(self, x0, y0, x1, y1, color):
         super().__init__([(x0, y0), (x1, y1)], outline=color)
+        self.color = color
 
     @property
     def color(self):
-        """The line color value. Can be a hex value for a color or
-        ``None`` for no line color."""
-        return self.outline
+        return self.color
 
-    @color.setter
+    @color_setter
     def color(self, color):
-        self.outline = color
+        self.color = color
+        super().outline = color
         return
+        
