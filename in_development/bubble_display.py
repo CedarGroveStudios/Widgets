@@ -1,6 +1,6 @@
 # LED bubble display widget
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-11-18 v1.0
+# 2021-11-19 v1.0
 
 import displayio
 from adafruit_display_shapes.line import Line
@@ -28,6 +28,7 @@ NUMBERS = {
     '-' : 0b01000000,  # -
     '.' : 0b10000000,  # .
     ' ' : 0b00000000,  # <space>
+    'x' : 0b00001000,  # _ (replace x with underscore for hexadecimal text)
 }
 
 
@@ -185,29 +186,52 @@ class BubbleDisplay:
     #    return
 
 
-    def show(self, display=''):
-        display = display[0:self._units * 4]
-        display = (' ' * ((self._units * 4) - len(display))) + display
-        dp_digit = display.find('.')
-        if dp_digit > -1:
-            display = ' ' + display[0:dp_digit] + display[dp_digit + 1:]
-            self._digits[(dp_digit * 8) + 7].fill = Palette.RED
+    def text(self, text=''):
+        self._text = text
+        self._text = self._text[0:self._units * 4]  # truncate to left-most digits
+        self._text = (' ' * ((self._units * 4) - len(self._text))) + self._text
 
-        for digit in range(0, self._units * 4):
-            if display[digit] in NUMBERS:
-                bits = NUMBERS[display[digit]]
+        for self._digit in range(0, self._units * 4):
+            if self._text[self._digit] in NUMBERS:
+                self._decode = NUMBERS[self._text[self._digit]]
             else:
-                bits = NUMBERS[' ']
-            for segment in range(0, 8):
-                if bits & pow(2, segment):
-                    self._digits[(digit * 8) + segment].color = Palette.RED
+                self._decode = NUMBERS[' ']
+            for self._segment in range(0, 8):
+                if self._decode & pow(2, self._segment):
+                    self._digits[(self._digit * 8) + self._segment].color = Palette.RED
+                    self._digits[(self._digit * 8) + self._segment].fill = Palette.RED
                 else:
-                    self._digits[(digit * 8) + segment].color = Palette.RED_BKG
-                self._digits[(digit * 8) + 7].fill = Palette.RED_BKG
+                    self._digits[(self._digit * 8) + self._segment].color = Palette.RED_BKG
+                    self._digits[(self._digit * 8) + self._segment].fill = Palette.RED_BKG
 
-        if dp_digit > -1:
-            display = ' ' + display[0:dp_digit] + display[dp_digit + 1:]
-            self._digits[(dp_digit * 8) + 7].fill = Palette.RED
+
+
+    def value(self, value=None, mode='Normal'):
+        """ use 'HP-35' for decimal point between digits """
+        self._value = value
+        self._mode = mode
+        if self._value == None:
+            self._display = ''
+        else:
+            self._display = str(self._value)
+
+        self._display = (' ' * ((self._units * 4) - len(self._display))) + self._display
+
+        self._dp_digit = self._display.find('.')
+        if self._dp_digit > -1 and self._mode != 'HP-35':
+            self._display = ' ' + self._display[0:self._dp_digit] + self._display[self._dp_digit + 1:]
+
+        # if value string is larger than can be displayed, show dashes
+        if len(self._display) > self._units * 4:
+            self._display = '-' * self._units * 4
+
+        self.text(self._display)
+
+        # clear all decimal points and plot the current point
+        for self._digit in range(0, self._units * 4):
+            self._digits[(self._digit * 8) + 7].fill = Palette.RED_BKG
+        if self._dp_digit > -1:
+            self._digits[(self._dp_digit * 8) + 7].fill = Palette.RED
         return
 
 

@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# bargraph_bubble_neopix.py
-# 2021-11-18 v1.0
+# bar_bubble_neo_code.py
+# 2021-11-19 v1.0
 
 # For host board with integral display
 
@@ -72,10 +72,12 @@ while True:
         m = i / 100
         magic_eye_1.plot_eye(m)
         scale.plot_hands(m, 0)
+        bubble_display.value(i)
     for i in range(200, 0, -5):
         m = i / 100
         magic_eye_1.plot_eye(m)
         scale.plot_hands(0, m)
+        bubble_display.value(i)
     print(
         f"frame: {(time.monotonic() - t0):5.2f} sec   free memory: {gc.mem_free()} bytes"
     )
@@ -102,7 +104,11 @@ while True:
         bargraph_1.show(left_level)
         bargraph_2.show(right_level)
 
-        bubble_display.show(str(random. randrange(0, 65535) * random.randrange(0, 65535) / random.randrange(0, 65535)))
+        #bubble_display.value((random. randrange(0, 65535) * random.randrange(0, 65535) / random.randrange(0, 65535)))
+        #bubble_display.text('abc.def.012345')
+        #bubble_display.text(hex(random.randrange(0, 65535)))
+        #bubble_display.text(bin(random.randrange(0, 2048)))
+        bubble_display.value(-1 * random.randrange(0, 65535) / 100)
 
     gc.collect()
     sdcard.screenshot()
