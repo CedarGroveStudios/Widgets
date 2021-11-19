@@ -10,6 +10,7 @@ import displayio
 import gc
 import time
 import board
+import math
 import random
 from analogio import AnalogIn
 from simpleio import tone
@@ -104,11 +105,13 @@ while True:
         bargraph_1.show(left_level)
         bargraph_2.show(right_level)
 
-        #bubble_display.value((random. randrange(0, 65535) * random.randrange(0, 65535) / random.randrange(0, 65535)))
+        bubble_display.value((random. randrange(0, 65535) * random.randrange(0, 65535) / random.randrange(0, 65535)))
         #bubble_display.text('abc.def.012345')
         #bubble_display.text(hex(random.randrange(0, 65535)))
         #bubble_display.text(bin(random.randrange(0, 2048)))
-        bubble_display.value(-1 * random.randrange(0, 65535) / 100)
+        #bubble_display.value(-1 * random.randrange(0, 65535) / 100)
+        #bubble_display.value(-12345678912)
+        #bubble_display.text('0123456789abcdef0123')
 
     gc.collect()
     sdcard.screenshot()

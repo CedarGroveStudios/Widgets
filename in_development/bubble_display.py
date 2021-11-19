@@ -205,7 +205,6 @@ class BubbleDisplay:
                     self._digits[(self._digit * 8) + self._segment].fill = Palette.RED_BKG
 
 
-
     def value(self, value=None, mode='Normal'):
         """ use 'HP-35' for decimal point between digits """
         self._value = value
@@ -215,15 +214,16 @@ class BubbleDisplay:
         else:
             self._display = str(self._value)
 
-        self._display = (' ' * ((self._units * 4) - len(self._display))) + self._display
-
-        self._dp_digit = self._display.find('.')
-        if self._dp_digit > -1 and self._mode != 'HP-35':
-            self._display = ' ' + self._display[0:self._dp_digit] + self._display[self._dp_digit + 1:]
-
         # if value string is larger than can be displayed, show dashes
         if len(self._display) > self._units * 4:
             self._display = '-' * self._units * 4
+        else:
+            self._display = (' ' * ((self._units * 4) - len(self._display))) + self._display
+
+        # locate decimal point and remove from display string
+        self._dp_digit = self._display.find('.')
+        if self._dp_digit > -1 and self._mode != 'HP-35':
+            self._display = ' ' + self._display[0:self._dp_digit] + self._display[self._dp_digit + 1:]
 
         self.text(self._display)
 
