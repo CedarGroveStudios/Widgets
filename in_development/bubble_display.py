@@ -1,6 +1,6 @@
 # LED bubble display widget
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-11-13 v1.0
+# 2021-11-18 v1.0
 
 import displayio
 from adafruit_display_shapes.line import Line
@@ -8,27 +8,27 @@ from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 
 # 8-bit to 7 segment; dp g f e d c b a
-NUMBERS = [
-    0b00111111,  # 0
-    0b00000110,  # 1
-    0b01011011,  # 2
-    0b01001111,  # 3
-    0b01100110,  # 4
-    0b01101101,  # 5
-    0b01111101,  # 6
-    0b00000111,  # 7
-    0b01111111,  # 8
-    0b01101111,  # 9
-    0b01110111,  # a
-    0b01111100,  # b
-    0b00111001,  # C
-    0b01011110,  # d
-    0b01111001,  # E
-    0b01110001,  # F
-    0b01000000,  # -
-    0b10000000,  # .
-    0b00000000,  # <space>
-]
+NUMBERS = {
+    '0' : 0b00111111,  # 0
+    '1' : 0b00000110,  # 1
+    '2' : 0b01011011,  # 2
+    '3' : 0b01001111,  # 3
+    '4' : 0b01100110,  # 4
+    '5' : 0b01101101,  # 5
+    '6' : 0b01111101,  # 6
+    '7' : 0b00000111,  # 7
+    '8' : 0b01111111,  # 8
+    '9' : 0b01101111,  # 9
+    'a' : 0b01110111,  # a
+    'b' : 0b01111100,  # b
+    'c' : 0b00111001,  # C
+    'd' : 0b01011110,  # d
+    'e' : 0b01111001,  # E
+    'f' : 0b01110001,  # F
+    '-' : 0b01000000,  # -
+    '.' : 0b10000000,  # .
+    ' ' : 0b00000000,  # <space>
+}
 
 
 class Palette:
@@ -38,6 +38,7 @@ class Palette:
     RED_PKG = 0x701010
     RED_BKG = 0x501010
     RED_LENS = 0x901010
+    WHITE = 0xFFFFFF
 
 
 class BubbleDisplay:
@@ -185,25 +186,28 @@ class BubbleDisplay:
 
 
     def show(self, display=''):
-        self._disp = display
-        """for digit in range(0, len(self._disp)):
-            print('digit, value', digit, self._disp[digit])"""
-        return
+        display = display[0:self._units * 4]
+        display = (' ' * ((self._units * 4) - len(display))) + display
+        dp_digit = display.find('.')
+        if dp_digit > -1:
+            display = ' ' + display[0:dp_digit] + display[dp_digit + 1:]
+            self._digits[(dp_digit * 8) + 7].fill = Palette.RED
 
-    def _build_digit(self, display=''):
-        for chip in range(0, self._units):
-            for digit in range(0, 4):
-                number = (chip * 4) + digit
-                bits = NUMBERS[number]
+        for digit in range(0, self._units * 4):
+            if display[digit] in NUMBERS:
+                bits = NUMBERS[display[digit]]
+            else:
+                bits = NUMBERS[' ']
+            for segment in range(0, 8):
+                if bits & pow(2, segment):
+                    self._digits[(digit * 8) + segment].color = Palette.RED
+                else:
+                    self._digits[(digit * 8) + segment].color = Palette.RED_BKG
+                self._digits[(digit * 8) + 7].fill = Palette.RED_BKG
 
-                #print('(chip * 32) + (digit * 8)', (chip * self._units) + (digit * 4))
-                seg_a_index = (chip * 32) + (digit * 8)
-                for segment in range(0, 8):
-                    if bits & pow(2, segment):
-                        self._digits[seg_a_index + segment].outline = Palette.RED
-                    else:
-                        self._digits[seg_a_index + segment].outline = Palette.RED_BKG
-
+        if dp_digit > -1:
+            display = ' ' + display[0:dp_digit] + display[dp_digit + 1:]
+            self._digits[(dp_digit * 8) + 7].fill = Palette.RED
         return
 
 

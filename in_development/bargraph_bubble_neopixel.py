@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # bargraph_bubble_neopix.py
-# 2021-11-14 v1.0
+# 2021-11-18 v1.0
 
 # For host board with integral display
 
@@ -51,10 +51,8 @@ test_display_group.append(bargraph_1.display_group)
 bargraph_2 = Bargraph(units=2, center=(10, 55), mode="VU")
 test_display_group.append(bargraph_2.display_group)
 
-bubble_display = BubbleDisplay(units=4, center=(10, 200))
+bubble_display = BubbleDisplay(units=3, center=(10, 200))
 test_display_group.append(bubble_display.display_group)
-
-bubble_display._build_digit()
 
 neopixel = NeoPixel(units=14, center=(10, 140))
 test_display_group.append(neopixel.display_group)
@@ -104,7 +102,7 @@ while True:
         bargraph_1.show(left_level)
         bargraph_2.show(right_level)
 
-        bubble_display.show('012345')
+        bubble_display.show(str(random. randrange(0, 65535) * random.randrange(0, 65535) / random.randrange(0, 65535)))
 
     gc.collect()
     sdcard.screenshot()
