@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale_example.py
-# 2021-11-08 v1.0
+# 2021-11-20 v1.0
 
 # For host board with integral display
 
@@ -30,8 +30,8 @@ display_group.append(scale_1.display_group)
 scale_2 = Scale(center=(0.5, 0.5), size=0.5)
 display_group.append(scale_2.display_group)
 
-scale_1.plot_hands()
-scale_2.plot_hands()
+scale_1.value = (0, 0)
+scale_2.value = (0, 0)
 
 display.show(display_group)
 tone(board.A0, 880, 0.1)
@@ -42,13 +42,13 @@ while True:
 
     for i in range(0, 125, 1):
         m = i / 100
-        scale_2.plot_hands(m, 0)
+        scale_2.value = (m, 0)
     for i in range(125, 0, -4):
         m = i / 100
-        scale_2.plot_hands(0, m)
+        scale_2.value = (0, m)
     print(f'frame: {(time.monotonic() - t0):5.2f} sec    free memory: {gc.mem_free()} bytes')
 
     m0 = 0
     for i in range(0, 100):
-        scale_1.plot_hands(random.randrange(10, 50) / 100, random.randrange(60, 90) / 100)
-        scale_2.plot_hands(random.randrange(0, 25) / 100, random.randrange(25, 50) / 100)
+        scale_1.value = (random.randrange(10, 50) / 100, random.randrange(60, 90) / 100)
+        scale_2.value = (random.randrange(0, 25) / 100, random.randrange(25, 50) / 100)

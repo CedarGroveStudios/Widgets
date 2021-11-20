@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-11-09 v0.6
+# 2021-11-20 v1.0
 
 import displayio
 from math import pi, pow, sin, cos, sqrt
@@ -17,9 +17,9 @@ from adafruit_display_text.label import Label
 class Palette:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
-    CYAN = 0x00FFFF
     BLUE = 0x0000FF
     BLUE_DK = 0x000080
+    CYAN = 0x00FFFF
     GRAY = 0x508080
     GREEN = 0x00FF00
     ORANGE = 0xFFA500
@@ -57,9 +57,9 @@ class Scale:
             self.HEIGHT = display_size[1]
 
         self._max_scale = max_scale
-        self._size = size
 
-        # Define object center in normalized display and pixel coordinates
+        self._size = size
+        # Define object center relative to normalized display and pixel coordinates
         self._center_norm = center
         self._center = self.display_to_pixel(self._center_norm[0], self._center_norm[1])
 
@@ -239,6 +239,15 @@ class Scale:
         """Normalized display coordinates of object center."""
         return self._center_norm
 
+    @property
+    def value(self):
+        """Currently displayed value."""
+        return self._hand_1, self._hand_2
+
+    @value.setter
+    def value(self, hands=(0,0)):
+        self._show_hands(hands[0], hands[1])
+
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display
         pixel position."""
@@ -269,7 +278,7 @@ class Scale:
         self._min_axis = min(self.WIDTH, self.HEIGHT)
         return int(round(self._min_axis * size * distance, 0))
 
-    def plot_hands(self, hand_1=0, hand_2=0):
+    def _show_hands(self, hand_1=0, hand_2=0):
         """Display indicator plot_handes and move scale plate
         proportionally. Input is normalized for 0.0 to 1.0 (minimum and maximum
         range), but accepts any floating point value.
@@ -277,19 +286,22 @@ class Scale:
         :param hand_1: The normalized first hand position on the dial circumference.
         :param hand_1: The normalized second hand position on the dial circumference."""
 
-        if hand_1 != min(1.0, max(hand_1, 0.0)):
+        self._hand_1 = hand_1
+        self._hand_2 = hand_2
+
+        if self._hand_1 != min(1.0, max(self._hand_1, 0.0)):
             self._hand_1_outline = Palette.RED
         else:
             self._hand_1_outline = Palette.ORANGE
 
-        if hand_2 != min(1.0, max(hand_2, 0.0)):
+        if self._hand_2 != min(1.0, max(self._hand_2, 0.0)):
             self._hand_2_outline = Palette.RED
         else:
             self._hand_2_outline = Palette.GREEN
 
         # Move plate/riser
         self._plate_disp = self._plate_y - (
-            min(2, max(-2, (hand_1 + hand_2))) * 0.10 / 2
+            min(2, max(-2, (self._hand_1 + self._hand_2))) * 0.10 / 2
         )
         self._x0, self.plate.y = self.ortho_to_pixel(
             0.00, self._plate_disp, size=self._size
@@ -299,13 +311,13 @@ class Scale:
         # Draw hands
         self._base = self._outside_radius // 16
         self._x0, self._y0 = self.dial_to_pixel(
-            hand_2, center=self._center, radius=self._outside_radius
+            self._hand_2, center=self._center, radius=self._outside_radius
         )
         self._x1, self._y1 = self.dial_to_pixel(
-            hand_2 - 0.25, center=self._center, radius=self._base
+            self._hand_2 - 0.25, center=self._center, radius=self._base
         )
         self._x2, self._y2 = self.dial_to_pixel(
-            hand_2 + 0.25, center=self._center, radius=self._base
+            self._hand_2 + 0.25, center=self._center, radius=self._base
         )
         self.hand_2 = Triangle(
             self._x0,
@@ -322,13 +334,13 @@ class Scale:
             self._hands_group.remove(self._hands_group[0])
 
         self._x0, self._y0 = self.dial_to_pixel(
-            hand_1, center=self._center, radius=self._outside_radius
+            self._hand_1, center=self._center, radius=self._outside_radius
         )
         self._x1, self._y1 = self.dial_to_pixel(
-            hand_1 - 0.25, center=self._center, radius=self._base
+            self._hand_1 - 0.25, center=self._center, radius=self._base
         )
         self._x2, self._y2 = self.dial_to_pixel(
-            hand_1 + 0.25, center=self._center, radius=self._base
+            self._hand_1 + 0.25, center=self._center, radius=self._base
         )
         self.hand_1 = Triangle(
             self._x0,

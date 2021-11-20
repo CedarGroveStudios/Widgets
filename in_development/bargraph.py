@@ -1,6 +1,6 @@
 # 10-Segment Bargraph widget
 # based on the Lucky Light LED 10-Segment LED Gauge Bar and LML391x controllers
-# 2021-11-14 v1.0
+# 2021-11-20 v0.6
 
 import displayio
 from adafruit_display_shapes.rect import Rect
@@ -12,7 +12,7 @@ class Palette:
     BLACK = 0x000000
     GRAY = 0x508080
     GRAY_DK = 0x404040
-    GREEN_DK = 0x00A000
+    GREEN_LED = 0x00A000
     RED = 0xFF0000
     YELLOW = 0xFFFF00
 
@@ -23,15 +23,28 @@ class Bargraph:
         units=0,
         center=(0, 0),
         size=1,
-        range="VU",
-        mode="BAR",
+        range='VU',
+        mode='BAR',
         display_size=(None, None),
     ):
-        """LM3914 Dot/Bar Display Driver (volts; 1.2v full-scale/10 bars)
+        """Bargraph display widget. Accepts a normalized (0 to 1.0) input
+        representing full-scale of a single or stacked bargraph object.
+
+        Emulates the LM391x series of dot/bar display drivers:
+        LM3914 Dot/Bar Display Driver (volts; 1.2v full-scale/10 bars)
         LM3915 (dB; 3dB per step, 30dB range/10 bars)
         LM3916 (VU; 10v full-scale; -20, -10, -7, -5, -3, -1, 0, +1, +2, +3dB)
             ( -40, -37, -34, -31, -28, -25, -22, -19, -16, -13, -10, -7, -5, -3, -1, 0, +1, +2, +3dB)
-        dot or bar mode; slight glow of surrounding dots in dot mode"""
+
+        'VU' range shades the top 4 bars of the single or stacked bargraph YEL,
+        RED, RED, RED to represent a typical VU peak range.
+        'BAR' mode is a contiguous illumination of segments from the first
+        to the segment representing the signal value. 'DOT' mode illuminates
+        the signal value segment with a slight glow of the surrounding segments,
+        particularly useful when the signal value is zero.
+
+        The current version does not adjust normalized signal input to volts, VU,
+        or linear dB scale, nor does it implement DOT mode."""
 
         self._units = units
         self._origin = center
@@ -87,6 +100,16 @@ class Bargraph:
         """Number of units."""
         return self._units
 
+    @property
+    def value(self):
+        """Currently displayed value."""
+        return self._signal
+
+    @value.setter
+    def value(self, signal=None):
+        self._show_signal(signal)
+
+
     # @property
     # def center(self, cluster=0):
     #    """Normalized display coordinates of the object center."""
@@ -94,7 +117,7 @@ class Bargraph:
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    # @centersetter
+    # @center.setter
     # def center(self, cluster=0, x, y):
     #    """Set the normalized display coordinates of the object center."""
     #    procedure for setting all coordinates for a cluster
@@ -102,7 +125,7 @@ class Bargraph:
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    def show(self, signal=None):
+    def _show_signal(self, signal=None):
         self._signal = signal
         self._bar = int(round(self._signal * (self._units * 10), 0))
         for i in range(0, self._units * 10):
@@ -112,7 +135,7 @@ class Bargraph:
                 elif i == ((self._units - 1) * 10) + 6:
                     self._bars[i].fill = Palette.YELLOW
                 else:
-                    self._bars[i].fill = Palette.GREEN_DK
+                    self._bars[i].fill = Palette.GREEN_LED
             else:
                 self._bars[i].fill = Palette.BLACK
         return

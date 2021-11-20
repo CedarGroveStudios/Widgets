@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-11-09 v0.5
+# 2021-11-20 v1.0
 
 import displayio
 from math import pi, pow, sin, cos, sqrt
@@ -174,7 +174,7 @@ class MagicEye:
         self._image_group.append(self._eye_group)
         self._image_group.append(self._bezel_group)
 
-        self.plot_eye()  # Plot no signal shadow wedge
+        self._show_signal()  # Plot no signal shadow wedge
         return
 
     @property
@@ -187,7 +187,16 @@ class MagicEye:
         """Size of display."""
         return (self.WIDTH, self.HEIGHT)
 
-    def plot_eye(self, signal=0):
+    @property
+    def value(self):
+        """Currently displayed value."""
+        return self._eye_value
+
+    @value.setter
+    def value(self, signal=0):
+        self._show_signal(signal)
+
+    def _show_signal(self, signal=0):
         """Plot the MagicEye shadow wedge. Input is a positive floating point
         value normalized for 0.0 to 1.0 (no signal to full signal) within the
         100-degree shadow wedge, but accepts a signal value up to and including

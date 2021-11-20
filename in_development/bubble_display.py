@@ -1,6 +1,6 @@
 # LED bubble display widget
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-11-19 v1.0
+# 2021-11-20 v0.6
 
 import displayio
 from adafruit_display_shapes.line import Line
@@ -170,6 +170,24 @@ class BubbleDisplay:
         """Number of units."""
         return self._units
 
+    @property
+    def value(self):
+        """Currently displayed value."""
+        return self._value
+
+    @value.setter
+    def value(self, value=None, mode='Normal'):
+        self._show_value(value, mode)
+
+    @property
+    def text(self):
+        """Currently displayed text."""
+        return self._text
+
+    @text.setter
+    def text(self, text=''):
+        self._show_text(text)
+
     # @property
     # def center(self, cluster=0):
     #    """Normalized display coordinates of the object center."""
@@ -186,7 +204,7 @@ class BubbleDisplay:
     #    return
 
 
-    def text(self, text=''):
+    def _show_text(self, text=''):
         self._text = text
         self._text = self._text[0:self._units * 4]  # truncate to left-most digits
         self._text = (' ' * ((self._units * 4) - len(self._text))) + self._text
@@ -205,7 +223,7 @@ class BubbleDisplay:
                     self._digits[(self._digit * 8) + self._segment].fill = Palette.RED_BKG
 
 
-    def value(self, value=None, mode='Normal'):
+    def _show_value(self, value=None, mode='Normal'):
         """ use 'HP-35' for decimal point between digits """
         self._value = value
         self._mode = mode
@@ -225,7 +243,7 @@ class BubbleDisplay:
         if self._dp_digit > -1 and self._mode != 'HP-35':
             self._display = ' ' + self._display[0:self._dp_digit] + self._display[self._dp_digit + 1:]
 
-        self.text(self._display)
+        self._show_text(self._display)
 
         # clear all decimal points and plot the current point
         for self._digit in range(0, self._units * 4):

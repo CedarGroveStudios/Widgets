@@ -1,5 +1,5 @@
 # NeoPixel widget
-# 2021-11-16 v1.0
+# 2021-11-20 v0.6
 
 import displayio
 from adafruit_display_shapes.circle import Circle

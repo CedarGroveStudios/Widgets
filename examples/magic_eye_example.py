@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye_example.py
-# 2021-10-29 v1.0
+# 2021-11-20 v1.0
 
 # For host board with integral display
 
@@ -34,13 +34,13 @@ while True:
 
     for i in range(0, 200, 5):
         m = i / 100
-        magic_eye_1.plot_eye(m)
+        magic_eye_1.value = m
     for i in range(200, 0, -5):
         m = i / 100
-        magic_eye_1.plot_eye(m)
+        magic_eye_1.value = m
     print(f'frame: {(time.monotonic() - t0):5.2f} sec   free memory: {gc.mem_free()} bytes')
 
     m0 = 0
     for i in range(0, 100):
-        magic_eye_1.plot_eye(random.randrange(0, 120) / 100)
-        magic_eye_2.plot_eye(random.randrange(0, 120) / 100)
+        magic_eye_1.value = (random.randrange(0, 120) / 100)
+        magic_eye_2.value = (random.randrange(0, 120) / 100)
