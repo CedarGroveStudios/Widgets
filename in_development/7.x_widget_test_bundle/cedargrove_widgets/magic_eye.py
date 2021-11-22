@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-11-20 v1.0
+# 2021-11-22 v1.0
 
 import displayio
 from math import pi, pow, sin, cos, sqrt
@@ -11,13 +11,15 @@ from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.triangle import Triangle
 
+from adafruit_display_shapes.polygon import Polygon
+
 
 class Palette:
     # Define a few colors
     BLACK = 0x000000
     CYAN = 0x00FFFF
-    GREEN_DK = 0x006000
-    GREEN_LT = 0x40A060
+    GREEN_DK = 0x005000
+    GREEN_LT = 0x00A060
 
 
 class MagicEye:
@@ -234,7 +236,7 @@ class MagicEye:
             self._x2,
             self._y2,
             fill=self._eye_color,
-            outline=Palette.CYAN,
+            outline=None,
         )
         self._eye_group.append(self.eye)
 
