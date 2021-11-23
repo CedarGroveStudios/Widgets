@@ -2,20 +2,17 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-11-22 v1.0
+# 2021-11-22 v1.1
 
 import displayio
+import vectorio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_display_shapes.circle import Circle
-from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.triangle import Triangle
 
-from adafruit_display_shapes.polygon import Polygon
-
-
-class Palette:
-    # Define a few colors
+class Colors:
+    # Define a few default colors
     BLACK = 0x000000
     CYAN = 0x00FFFF
     GREEN_DK = 0x005000
@@ -28,7 +25,7 @@ class MagicEye:
         center=(0.50, 0.50),
         size=0.5,
         display_size=(None, None),
-        bezel_color=Palette.BLACK,
+        bezel_color=Colors.BLACK,
     ):
         """Instantiate the 6E5 magic eye graphic object for DisplayIO devices.
         Builds a hierarchical DisplayIO group consisting of sub-groups for the
@@ -79,6 +76,8 @@ class MagicEye:
         self._bezel_group = displayio.Group()  # Bezel wedges/doughnut and light shield
 
         self._bezel_color = bezel_color
+        self._v_palette = displayio.Palette(1)
+        self._v_palette[0] = self._bezel_color
 
         # Define green phosphor target anode
         self._sx, self._sy = self._center
@@ -86,24 +85,21 @@ class MagicEye:
             self._sx,
             self._sy,
             self._outside_radius,
-            fill=Palette.GREEN_LT,
+            fill=Colors.GREEN_LT,
             outline=None,
             stroke=0,
         )
         self._anode_group.append(self.target_anode)
 
-        # Define wire shadows
-        self._rx, self._ry = self.dial_to_pixel(
-            0.25, center=self._center, radius=self._inside_radius
-        )
-        self.shadow_a = Line(self._sx, self._sy, self._rx, self._ry, Palette.BLACK)
-        self._anode_group.append(self.shadow_a)
-
-        self._rx, self._ry = self.dial_to_pixel(
+        # Define wire shadow
+        self._rx0, self._ry0 = self.dial_to_pixel(
             0.75, center=self._center, radius=self._inside_radius
         )
-        self.shadow_b = Line(self._sx, self._sy, self._rx, self._ry, Palette.BLACK)
-        self._anode_group.append(self.shadow_b)
+        self._rx1, self._ry1 = self.dial_to_pixel(
+            0.25, center=self._center, radius=self._inside_radius
+        )
+        self.shadow = vectorio.Rectangle(pixel_shader=self._v_palette, x=self._rx0, y=self._ry0, width=self._rx1-self._rx0, height=1)
+        self._anode_group.append(self.shadow)
 
         # Define bezel: corner wedges
         self._corner_side = int(
@@ -112,28 +108,11 @@ class MagicEye:
         self._corner_hyp = int(sqrt(2 * pow(self._corner_side, 2)))
         self._corner_x = self._center[0] - self._outside_radius
         self._corner_y = self._center[1] + self._outside_radius
-
-        self._wedge_a = Triangle(
-            self._corner_x,
-            self._corner_y,
-            self._corner_x + self._corner_hyp,
-            self._corner_y,
-            self._corner_x,
-            self._corner_y - self._corner_hyp,
-            fill=self._bezel_color,
-        )
+        self._wedge_a = vectorio.Polygon(pixel_shader=self._v_palette, points=[(self._corner_x, self._corner_y), (self._corner_x + self._corner_hyp, self._corner_y), (self._corner_x, self._corner_y - self._corner_hyp)], x=1, y=1)
         self._bezel_group.append(self._wedge_a)
 
         self._corner_x = self._center[0] + self._outside_radius
-        self._wedge_b = Triangle(
-            self._corner_x,
-            self._corner_y,
-            self._corner_x - self._corner_hyp,
-            self._corner_y,
-            self._corner_x,
-            self._corner_y - self._corner_hyp,
-            fill=self._bezel_color,
-        )
+        self._wedge_b = vectorio.Polygon(pixel_shader=self._v_palette, points=[(self._corner_x, self._corner_y), (self._corner_x - self._corner_hyp, self._corner_y), (self._corner_x, self._corner_y - self._corner_hyp)], x=1, y=1)
         self._bezel_group.append(self._wedge_b)
 
         # Define bezel: doughnut
@@ -145,7 +124,7 @@ class MagicEye:
         for i in range(1, self._doughnut_gap):
             self._color = self._bezel_color
             if i == 1:
-                self._color = Palette.GREEN_DK
+                self._color = Colors.GREEN_DK
 
             self._rx, self._ry = self.display_to_pixel(0.00, self._radius_norm)
             self._doughnut_mask = Circle(
@@ -161,14 +140,7 @@ class MagicEye:
         # Define cathode light shield
         self._cathode_shield_group = displayio.Group()
         self._rx, self._ry = self.display_to_pixel(0.00, self._radius_norm)
-        self._cathode_shield = Circle(
-            self._sx,
-            self._sy,
-            self._shield_radius,
-            fill=Palette.BLACK,
-            outline=None,
-            stroke=1,
-        )
+        self._cathode_shield = vectorio.Circle(pixel_shader=self._v_palette, radius=self._shield_radius, x=self._sx, y=self._sy)
         self._bezel_group.append(self._cathode_shield)
 
         # Arrange image group layers
@@ -210,9 +182,9 @@ class MagicEye:
         self._eye_value = signal
         self._eye_value = min(max(0, self._eye_value), 2.0)
         if self._eye_value > 1.0:
-            self._eye_color = Palette.CYAN
+            self._eye_color = Colors.CYAN
         else:
-            self._eye_color = Palette.GREEN_DK
+            self._eye_color = Colors.GREEN_DK
 
         self._x0, self._y0 = self.display_to_pixel(
             self._center_norm[0], self._center_norm[1]
