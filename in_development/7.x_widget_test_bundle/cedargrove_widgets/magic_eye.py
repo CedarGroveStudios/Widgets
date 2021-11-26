@@ -2,14 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-11-22 v1.1
+# 2021-11-25 v1.2
 
 import displayio
+import time  # Deglitch -- replace with "displayio_layout.ease" function
 import vectorio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_display_shapes.circle import Circle
-from adafruit_display_shapes.rect import Rect
-from adafruit_display_shapes.triangle import Triangle
 
 class Colors:
     # Define a few default colors
@@ -75,19 +74,32 @@ class MagicEye:
         self._eye_group = displayio.Group()  # Dynamic eye and tarsus shadow wedge
         self._bezel_group = displayio.Group()  # Bezel wedges/doughnut and light shield
 
-        self._bezel_color = bezel_color
-        self._v_palette = displayio.Palette(1)
-        self._v_palette[0] = self._bezel_color
+        self._anode_palette = displayio.Palette(1)
+        self._anode_palette[0] = Colors.GREEN_LT
+
+        self._shadow_palette = displayio.Palette(1)
+        self._shadow_palette[0] = Colors.GREEN_DK
+
+        self._overlap_palette = displayio.Palette(1)
+        self._overlap_palette[0] = Colors.CYAN
+
+        self._bezel_palette = displayio.Palette(1)
+        if bezel_color == None:
+            self._bezel_color = Colors.BLACK
+        else:
+            self._bezel_color = bezel_color
+        self._bezel_palette[0] = self._bezel_color
+
+        self._cathode_palette = displayio.Palette(1)
+        self._cathode_palette[0] = Colors.BLACK
 
         # Define green phosphor target anode
         self._sx, self._sy = self._center
-        self.target_anode = Circle(
-            self._sx,
-            self._sy,
-            self._outside_radius,
-            fill=Colors.GREEN_LT,
-            outline=None,
-            stroke=0,
+        self.target_anode = vectorio.Circle(
+            pixel_shader=self._anode_palette,
+            radius=self._outside_radius,
+            x=self._sx,
+            y=self._sy,
         )
         self._anode_group.append(self.target_anode)
 
@@ -98,7 +110,7 @@ class MagicEye:
         self._rx1, self._ry1 = self.dial_to_pixel(
             0.25, center=self._center, radius=self._inside_radius
         )
-        self.shadow = vectorio.Rectangle(pixel_shader=self._v_palette, x=self._rx0, y=self._ry0, width=self._rx1-self._rx0, height=1)
+        self.shadow = vectorio.Rectangle(pixel_shader=self._cathode_palette, x=self._rx0, y=self._ry0, width=self._rx1-self._rx0, height=1)
         self._anode_group.append(self.shadow)
 
         # Define bezel: corner wedges
@@ -108,11 +120,11 @@ class MagicEye:
         self._corner_hyp = int(sqrt(2 * pow(self._corner_side, 2)))
         self._corner_x = self._center[0] - self._outside_radius
         self._corner_y = self._center[1] + self._outside_radius
-        self._wedge_a = vectorio.Polygon(pixel_shader=self._v_palette, points=[(self._corner_x, self._corner_y), (self._corner_x + self._corner_hyp, self._corner_y), (self._corner_x, self._corner_y - self._corner_hyp)], x=1, y=1)
+        self._wedge_a = vectorio.Polygon(pixel_shader=self._bezel_palette, points=[(self._corner_x, self._corner_y), (self._corner_x + self._corner_hyp, self._corner_y), (self._corner_x, self._corner_y - self._corner_hyp)], x=1, y=1)
         self._bezel_group.append(self._wedge_a)
 
         self._corner_x = self._center[0] + self._outside_radius
-        self._wedge_b = vectorio.Polygon(pixel_shader=self._v_palette, points=[(self._corner_x, self._corner_y), (self._corner_x - self._corner_hyp, self._corner_y), (self._corner_x, self._corner_y - self._corner_hyp)], x=1, y=1)
+        self._wedge_b = vectorio.Polygon(pixel_shader=self._bezel_palette, points=[(self._corner_x, self._corner_y), (self._corner_x - self._corner_hyp, self._corner_y), (self._corner_x, self._corner_y - self._corner_hyp)], x=1, y=1)
         self._bezel_group.append(self._wedge_b)
 
         # Define bezel: doughnut
@@ -140,7 +152,7 @@ class MagicEye:
         # Define cathode light shield
         self._cathode_shield_group = displayio.Group()
         self._rx, self._ry = self.display_to_pixel(0.00, self._radius_norm)
-        self._cathode_shield = vectorio.Circle(pixel_shader=self._v_palette, radius=self._shield_radius, x=self._sx, y=self._sy)
+        self._cathode_shield = vectorio.Circle(pixel_shader=self._cathode_palette, radius=self._shield_radius, x=self._sx, y=self._sy)
         self._bezel_group.append(self._cathode_shield)
 
         # Arrange image group layers
@@ -181,10 +193,11 @@ class MagicEye:
 
         self._eye_value = signal
         self._eye_value = min(max(0, self._eye_value), 2.0)
+
         if self._eye_value > 1.0:
-            self._eye_color = Colors.CYAN
+            self._eye_color = self._overlap_palette
         else:
-            self._eye_color = Colors.GREEN_DK
+            self._eye_color = self._shadow_palette
 
         self._x0, self._y0 = self.display_to_pixel(
             self._center_norm[0], self._center_norm[1]
@@ -200,25 +213,29 @@ class MagicEye:
             radius=self._outside_radius,
         )
 
-        self.eye = Triangle(
-            self._x0,
-            self._y0,
-            self._x1,
-            self._y1,
-            self._x2,
-            self._y2,
-            fill=self._eye_color,
-            outline=None,
+        self.eye = vectorio.Polygon(
+            pixel_shader=self._eye_color,
+            points=[(self._x0,self._y0),(self._x1,self._y1),(self._x2,self._y2)],
         )
         self._eye_group.append(self.eye)
 
         self._x = min(self._x1, self._x2)
         self._y = min(self._y1, self._y2)
         self._w = max(self._x1, self._x2) - self._x
+        if self._w <=0:
+            self._w = 1
         self._h = abs(self._center[1] + self._outside_radius - self._y) + 1
 
-        self.tarsus = Rect(self._x, self._y, self._w, self._h, fill=self._eye_color)
+        self.tarsus = vectorio.Rectangle(
+            pixel_shader=self._eye_color,
+            x=self._x,
+            y=self._y,
+            width=self._w,
+            height=self._h,
+            )
         self._eye_group.append(self.tarsus)
+
+        time.sleep(0.001)  # 1ms deglitch delay -- replace with "displayio_layout.ease" function
 
         if len(self._eye_group) > 2:
             self._eye_group.remove(self._eye_group[0])
