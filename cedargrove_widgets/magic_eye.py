@@ -5,7 +5,6 @@
 # 2021-11-25 v1.2
 
 import displayio
-import time  # Deglitch -- replace with "displayio_layout.ease" function
 import vectorio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_display_shapes.circle import Circle
