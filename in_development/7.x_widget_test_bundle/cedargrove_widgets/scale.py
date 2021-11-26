@@ -245,7 +245,7 @@ class Scale:
         return self._hand_1, self._hand_2
 
     @value.setter
-    def value(self, hands=(0,0)):
+    def value(self, hands=(0, 0)):
         self._show_hands(hands[0], hands[1])
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):

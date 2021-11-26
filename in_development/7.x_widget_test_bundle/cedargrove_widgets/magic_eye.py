@@ -10,6 +10,7 @@ import vectorio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_display_shapes.circle import Circle
 
+
 class Colors:
     # Define a few default colors
     BLACK = 0x000000
@@ -110,7 +111,13 @@ class MagicEye:
         self._rx1, self._ry1 = self.dial_to_pixel(
             0.25, center=self._center, radius=self._inside_radius
         )
-        self.shadow = vectorio.Rectangle(pixel_shader=self._cathode_palette, x=self._rx0, y=self._ry0, width=self._rx1-self._rx0, height=1)
+        self.shadow = vectorio.Rectangle(
+            pixel_shader=self._cathode_palette,
+            x=self._rx0,
+            y=self._ry0,
+            width=self._rx1 - self._rx0,
+            height=1,
+        )
         self._anode_group.append(self.shadow)
 
         # Define bezel: corner wedges
@@ -120,11 +127,29 @@ class MagicEye:
         self._corner_hyp = int(sqrt(2 * pow(self._corner_side, 2)))
         self._corner_x = self._center[0] - self._outside_radius
         self._corner_y = self._center[1] + self._outside_radius
-        self._wedge_a = vectorio.Polygon(pixel_shader=self._bezel_palette, points=[(self._corner_x, self._corner_y), (self._corner_x + self._corner_hyp, self._corner_y), (self._corner_x, self._corner_y - self._corner_hyp)], x=1, y=1)
+        self._wedge_a = vectorio.Polygon(
+            pixel_shader=self._bezel_palette,
+            points=[
+                (self._corner_x, self._corner_y),
+                (self._corner_x + self._corner_hyp, self._corner_y),
+                (self._corner_x, self._corner_y - self._corner_hyp),
+            ],
+            x=1,
+            y=1,
+        )
         self._bezel_group.append(self._wedge_a)
 
         self._corner_x = self._center[0] + self._outside_radius
-        self._wedge_b = vectorio.Polygon(pixel_shader=self._bezel_palette, points=[(self._corner_x, self._corner_y), (self._corner_x - self._corner_hyp, self._corner_y), (self._corner_x, self._corner_y - self._corner_hyp)], x=1, y=1)
+        self._wedge_b = vectorio.Polygon(
+            pixel_shader=self._bezel_palette,
+            points=[
+                (self._corner_x, self._corner_y),
+                (self._corner_x - self._corner_hyp, self._corner_y),
+                (self._corner_x, self._corner_y - self._corner_hyp),
+            ],
+            x=1,
+            y=1,
+        )
         self._bezel_group.append(self._wedge_b)
 
         # Define bezel: doughnut
@@ -152,7 +177,12 @@ class MagicEye:
         # Define cathode light shield
         self._cathode_shield_group = displayio.Group()
         self._rx, self._ry = self.display_to_pixel(0.00, self._radius_norm)
-        self._cathode_shield = vectorio.Circle(pixel_shader=self._cathode_palette, radius=self._shield_radius, x=self._sx, y=self._sy)
+        self._cathode_shield = vectorio.Circle(
+            pixel_shader=self._cathode_palette,
+            radius=self._shield_radius,
+            x=self._sx,
+            y=self._sy,
+        )
         self._bezel_group.append(self._cathode_shield)
 
         # Arrange image group layers
@@ -199,6 +229,7 @@ class MagicEye:
         else:
             self._eye_color = self._shadow_palette
 
+        # Combined shadow wedge and tarsus polygon points
         self._x0, self._y0 = self.display_to_pixel(
             self._center_norm[0], self._center_norm[1]
         )
@@ -212,30 +243,19 @@ class MagicEye:
             center=self._center,
             radius=self._outside_radius,
         )
+        self._points = [
+            (self._x0, self._y0),
+            (self._x1, self._y1),
+            (self._x1, self._center[1] + self._outside_radius),
+            (self._x2, self._center[1] + self._outside_radius),
+            (self._x2, self._y2),
+        ]
 
         self.eye = vectorio.Polygon(
             pixel_shader=self._eye_color,
-            points=[(self._x0,self._y0),(self._x1,self._y1),(self._x2,self._y2)],
+            points=self._points,
         )
         self._eye_group.append(self.eye)
-
-        self._x = min(self._x1, self._x2)
-        self._y = min(self._y1, self._y2)
-        self._w = max(self._x1, self._x2) - self._x
-        if self._w <=0:
-            self._w = 1
-        self._h = abs(self._center[1] + self._outside_radius - self._y) + 1
-
-        self.tarsus = vectorio.Rectangle(
-            pixel_shader=self._eye_color,
-            x=self._x,
-            y=self._y,
-            width=self._w,
-            height=self._h,
-            )
-        self._eye_group.append(self.tarsus)
-
-        time.sleep(0.001)  # 1ms deglitch delay -- replace with "displayio_layout.ease" function
 
         if len(self._eye_group) > 2:
             self._eye_group.remove(self._eye_group[0])
