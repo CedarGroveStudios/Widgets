@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-11-26 v1.4
-
-"""OUTSIDE RADIUS LENGTH CREATES MINOR ARTIFACTS WHEN USING VECTORIO POLYGON FOR
-SHADOW WEDGE + ARC """
+# 2021-11-26 v1.3
 
 import displayio
 import vectorio
@@ -27,14 +24,16 @@ class MagicEye:
         center=(0.50, 0.50),
         size=0.5,
         display_size=(None, None),
+        bezel_color=Colors.BLACK,
     ):
         """Instantiate the 6E5 magic eye graphic object for DisplayIO devices.
         Builds a hierarchical DisplayIO group consisting of sub-groups for the
-        anode target, eye, and cathode.
+        target, anode, eye, and bezel/cathode.
         Display size in pixels is specified as an integer tuple. If the
         display_size tuple is not specified and an integral display is listed
         in the board class, the display_size tuple will be equal to the
-        integral display width and height.
+        integral display width and height. The default RGB bezel color is
+        0x000000 (black).
 
         :param center: The target anode center x,y tuple in normalized display
         units. Defaults to (0.5, 0.5).
@@ -43,7 +42,8 @@ class MagicEye:
         :param display_size: The host display's integer width and height tuple
         expressed in pixels. If (None, None) and the host includes an integral
         display, the tuple value is set to (board.DISPLAY.width, board.DISPLAY.height).
-        """
+        :param bezel_color: The integer RGB color value for the outer bezel.
+        Recommend setting to display background color. Defaults to 0x000000 (black)."""
 
         # Determine default display size in pixels
         if None in display_size:
@@ -64,9 +64,9 @@ class MagicEye:
         self._radius_norm = size / 2
 
         # Target anode pixel screen values
-        self._outside_radius = int(round(self._radius_norm * min(self.WIDTH, self.HEIGHT), 0))
-        self._inside_radius = int(round(0.90 * self._outside_radius, 0))
-        self._shield_radius = int(round(0.40 * self._outside_radius, 0))
+        self._outside_radius = int(self._radius_norm * min(self.WIDTH, self.HEIGHT))
+        self._inside_radius = int(0.90 * self._outside_radius)
+        self._shield_radius = int(0.40 * self._outside_radius)
 
         # Create displayio group layers
         self._image_group = displayio.Group()  # Primary group for MagicEye class
@@ -83,15 +83,23 @@ class MagicEye:
         self._overlap_palette = displayio.Palette(1)
         self._overlap_palette[0] = Colors.CYAN
 
+        self._bezel_palette = displayio.Palette(1)
+        if bezel_color == None:
+            self._bezel_color = Colors.BLACK
+        else:
+            self._bezel_color = bezel_color
+        self._bezel_palette[0] = self._bezel_color
+
         self._cathode_palette = displayio.Palette(1)
         self._cathode_palette[0] = Colors.BLACK
 
         # Define green phosphor target anode
+        self._sx, self._sy = self._center
         self.target_anode = vectorio.Circle(
             pixel_shader=self._anode_palette,
             radius=self._outside_radius,
-            x=self._center[0],
-            y=self._center[1],
+            x=self._sx,
+            y=self._sy,
         )
         self._anode_group.append(self.target_anode)
 
@@ -112,6 +120,9 @@ class MagicEye:
         self._anode_group.append(self.shadow)
 
         # Combined shadow wedge and tarsus polygon points
+        self._x0, self._y0 = self.display_to_pixel(
+            self._center_norm[0], self._center_norm[1]
+        )
         self._x1, self._y1 = self.dial_to_pixel(
             0.35 + (0 * 0.15),
             center=self._center,
@@ -123,13 +134,12 @@ class MagicEye:
             radius=self._outside_radius,
         )
         self._points = [
-            (self._x2, self._y2),
-            self._center,
+            (self._x0, self._y0),
             (self._x1, self._y1),
+            (self._x1, self._center[1] + self._outside_radius),
+            (self._x2, self._center[1] + self._outside_radius),
+            (self._x2, self._y2),
         ]
-
-        for i in range(0.35 * 100, 0.65 * 100):
-            self._points.append(self.dial_to_pixel(i/100, center=self._center, radius=self._outside_radius))
 
         self.eye = vectorio.Polygon(
             pixel_shader=self._shadow_palette,
@@ -137,27 +147,70 @@ class MagicEye:
         )
         self._eye_group.append(self.eye)
 
+        # Define bezel: corner wedges
+        self._corner_side = int(
+            sqrt(2 * pow(self._outside_radius, 2)) - self._outside_radius
+        )
+        self._corner_hyp = int(sqrt(2 * pow(self._corner_side, 2)))
+        self._corner_x = self._center[0] - self._outside_radius
+        self._corner_y = self._center[1] + self._outside_radius
+        self._wedge_a = vectorio.Polygon(
+            pixel_shader=self._bezel_palette,
+            points=[
+                (self._corner_x, self._corner_y),
+                (self._corner_x + self._corner_hyp, self._corner_y),
+                (self._corner_x, self._corner_y - self._corner_hyp),
+            ],
+            x=1,
+            y=1,
+        )
+        self._bezel_group.append(self._wedge_a)
+
+        self._corner_x = self._center[0] + self._outside_radius
+        self._wedge_b = vectorio.Polygon(
+            pixel_shader=self._bezel_palette,
+            points=[
+                (self._corner_x, self._corner_y),
+                (self._corner_x - self._corner_hyp, self._corner_y),
+                (self._corner_x, self._corner_y - self._corner_hyp),
+            ],
+            x=1,
+            y=1,
+        )
+        self._bezel_group.append(self._wedge_b)
+
+        # Define bezel: doughnut
+        # Future: REPAIR displayio circle FUNCTION FOR LARGER STROKE VALUES
+        self._doughnut_gap = (
+            sqrt(pow(self._outside_radius, 2) + pow(1 - self._corner_hyp, 2))
+        ) - self._outside_radius
+
+        for i in range(1, self._doughnut_gap):
+            self._color = self._bezel_color
+            if i == 1:
+                self._color = Colors.GREEN_DK
+
+            self._rx, self._ry = self.display_to_pixel(0.00, self._radius_norm)
+            self._doughnut_mask = Circle(
+                self._sx,
+                self._sy,
+                self._outside_radius + i,
+                fill=None,
+                outline=self._color,
+                stroke=2,
+            )
+            self._bezel_group.append(self._doughnut_mask)
+
         # Define cathode light shield
         self._cathode_shield_group = displayio.Group()
         self._rx, self._ry = self.display_to_pixel(0.00, self._radius_norm)
         self._cathode_shield = vectorio.Circle(
             pixel_shader=self._cathode_palette,
             radius=self._shield_radius,
-            x=self._center[0],
-            y=self._center[1],
+            x=self._sx,
+            y=self._sy,
         )
         self._bezel_group.append(self._cathode_shield)
-
-        # Define surrounding bezel
-        self._bezel = Circle(
-            x0=self._center[0],
-            y0=self._center[1],
-            r=self._outside_radius,
-            fill=None,
-            outline=Colors.BLACK,
-            stroke=1,
-        )
-        self._bezel_group.append(self._bezel)
 
         # Arrange image group layers
         self._image_group.append(self._anode_group)
@@ -198,6 +251,9 @@ class MagicEye:
         shadow wedge. Defaults to 0 (no signal)."""
 
         # Combined shadow wedge and tarsus polygon points
+        self._x0, self._y0 = self.display_to_pixel(
+            self._center_norm[0], self._center_norm[1]
+        )
         self._x1, self._y1 = self.dial_to_pixel(
             0.35 + (signal * 0.15),
             center=self._center,
@@ -208,63 +264,48 @@ class MagicEye:
             center=self._center,
             radius=self._outside_radius,
         )
+        self._points = [
+            (self._x0, self._y0),
+            (self._x1, self._y1),
+            (self._x1, self._center[1] + self._outside_radius),
+            (self._x2, self._center[1] + self._outside_radius),
+            (self._x2, self._y2),
+        ]
 
         if signal > 1.0:
             self.eye.pixel_shader = self._overlap_palette
-            self._points = [
-                (self._x1, self._y1),
-                self._center,
-                (self._x2, self._y2),
-            ]
-
         else:
             self.eye.pixel_shader = self._shadow_palette
-            self._points = [
-                (self._x2, self._y2),
-                self._center,
-                (self._x1, self._y1),
-            ]
-
-        rez = 100  # SHOULD CALC BASED ON DIAMETER PIXEL COUNT
-
-        range_min = min((0.35 + (signal * 0.15)) * rez, (0.65 - (signal * 0.15)) * rez)
-        range_max = 1+max((0.35 + (signal * 0.15)) * rez, (0.65 - (signal * 0.15)) * rez)
-
-        for i in range(range_min, range_max):
-            self._points.append(self.dial_to_pixel(i/rez, center=self._center, radius=self._outside_radius))
-            #print(i, self.dial_to_pixel(i/rez, center=self._center, radius=self._outside_radius),range_min, range_max)
 
         self.eye.points = self._points
-        """while True:
-            pass"""
         return
 
-    def display_to_pixel(self, x_norm=0, y_norm=0, size=1.0):
+    def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display
         pixel position."""
-        return int(round(size * self.WIDTH * x_norm, 0)), int(
-            round(size * self.HEIGHT * y_norm, 0)
+        return int(round(size * self.WIDTH * width_factor, 0)), int(
+            round(size * self.HEIGHT * height_factor, 0)
         )
 
-    def dial_to_pixel(self, dial_norm, center=(0, 0), radius=0):
-        """Convert normalized dial_norm input (-1.0 to 1.0) to display pixel
+    def dial_to_pixel(self, dial_factor, center=(0, 0), radius=0):
+        """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel
         position on the circumference of the dial's circle with center
         (x,y pixels) and radius (pixels)."""
-        self._rads = (-2 * pi) * (dial_norm)  # convert dial_norm to radians
+        self._rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
         self._rads = self._rads + (pi / 2)  # rotate axis counterclockwise
-        x = center[0] + int(round(cos(self._rads) * radius, 0))
-        y = center[1] - int(round(sin(self._rads) * radius, 0))
+        x = int(center[0] + (cos(self._rads) * radius))
+        y = int(center[1] - (sin(self._rads) * radius))
         return x, y
 
-    def cart_to_pixel(self, x_cart, y_cart, size=1.0):
+    def ortho_to_pixel(self, x, y, size=1.0):
         """Convert normalized cartesian position value (-0.5, to + 0.5) to display
         pixels."""
         self._min_axis = min(self.WIDTH, self.HEIGHT)
-        x1 = int(round(self._min_axis * size * x_cart, 0)) + self._center[0]
-        y1 = self._center[1] - int(round(self._min_axis * size * y_cart, 0))
+        x1 = int(round(self._min_axis * size * x, 0)) + self._center[0]
+        y1 = self._center[1] - int(round(self._min_axis * size * y, 0))
         return x1, y1
 
-    def cart_dist_to_pixel(self, dist_cart_norm=0, size=1.0):
+    def ortho_dist_to_pixel(self, distance=0, size=1.0):
         """Convert normalized cartesian distance value to display pixels."""
         self._min_axis = min(self.WIDTH, self.HEIGHT)
-        return int(round(self._min_axis * size * dist_cart_norm, 0))
+        return int(round(self._min_axis * size * distance, 0))
