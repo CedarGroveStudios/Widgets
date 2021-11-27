@@ -7,7 +7,6 @@
 import displayio
 import vectorio
 from math import pi, pow, sin, cos, sqrt
-import adafruit_displayio_layout.widgets.easing as ease
 from adafruit_display_shapes.circle import Circle
 
 
@@ -69,10 +68,10 @@ class MagicEye:
         self._inside_radius = int(0.90 * self._outside_radius)
         self._shield_radius = int(0.40 * self._outside_radius)
 
-        # Create displayio groups
+        # Create displayio group layers
         self._image_group = displayio.Group()  # Primary group for MagicEye class
         self._anode_group = displayio.Group()  # Target anode and wire shadows
-        self._eye_group = displayio.Group()  # Dynamic eye and tarsus shadow wedge
+        self._eye_group = displayio.Group()  # Dynamic eye + tarsus shadow wedge
         self._bezel_group = displayio.Group()  # Bezel wedges/doughnut and light shield
 
         self._anode_palette = displayio.Palette(1)
@@ -119,6 +118,34 @@ class MagicEye:
             height=1,
         )
         self._anode_group.append(self.shadow)
+
+        # Combined shadow wedge and tarsus polygon points
+        self._x0, self._y0 = self.display_to_pixel(
+            self._center_norm[0], self._center_norm[1]
+        )
+        self._x1, self._y1 = self.dial_to_pixel(
+            0.35 + (0 * 0.15),
+            center=self._center,
+            radius=self._outside_radius,
+        )
+        self._x2, self._y2 = self.dial_to_pixel(
+            0.65 - (0 * 0.15),
+            center=self._center,
+            radius=self._outside_radius,
+        )
+        self._points = [
+            (self._x0, self._y0),
+            (self._x1, self._y1),
+            (self._x1, self._center[1] + self._outside_radius),
+            (self._x2, self._center[1] + self._outside_radius),
+            (self._x2, self._y2),
+        ]
+
+        self.eye = vectorio.Polygon(
+            pixel_shader=self._shadow_palette,
+            points=self._points,
+        )
+        self._eye_group.append(self.eye)
 
         # Define bezel: corner wedges
         self._corner_side = int(
@@ -211,13 +238,7 @@ class MagicEye:
 
     @value.setter
     def value(self, signal=0):
-        signal = min(max(0, signal), 2.0)
-        move_count = 10
-        step = (signal - self._eye_value) / move_count
-        for i in range(0, move_count):
-            self._show_signal(self._eye_value + (i * step))  # linear easing
-            #self._show_signal(self._eye_value + (ease.circular_easeinout(i / move_count) * (signal - self._eye_value)))
-        self._eye_value = signal
+        self._eye_value = min(max(0, signal), 2.0)
         self._show_signal(self._eye_value)
 
     def _show_signal(self, signal=0):
@@ -228,13 +249,6 @@ class MagicEye:
 
         :param eye_normal: The normalized floating point signal  value for the
         shadow wedge. Defaults to 0 (no signal)."""
-
-        signal = min(max(0, signal), 2.0)
-
-        if signal > 1.0:
-            self._eye_color = self._overlap_palette
-        else:
-            self._eye_color = self._shadow_palette
 
         # Combined shadow wedge and tarsus polygon points
         self._x0, self._y0 = self.display_to_pixel(
@@ -258,15 +272,12 @@ class MagicEye:
             (self._x2, self._y2),
         ]
 
-        self.eye = vectorio.Polygon(
-            pixel_shader=self._eye_color,
-            points=self._points,
-        )
-        self._eye_group.append(self.eye)
+        if signal > 1.0:
+            self.eye.pixel_shader = self._overlap_palette
+        else:
+            self.eye.pixel_shader = self._shadow_palette
 
-        if len(self._eye_group) > 2:
-            self._eye_group.remove(self._eye_group[0])
-            self._eye_group.remove(self._eye_group[0])
+        self.eye.points = self._points
         return
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
