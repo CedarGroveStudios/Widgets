@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-11-25 v1.2
+# 2021-11-26 v1.3
 
 import displayio
 import vectorio
 from math import pi, pow, sin, cos, sqrt
+import adafruit_displayio_layout.widgets.easing as ease
 from adafruit_display_shapes.circle import Circle
 
 
@@ -189,7 +190,8 @@ class MagicEye:
         self._image_group.append(self._eye_group)
         self._image_group.append(self._bezel_group)
 
-        self._show_signal()  # Plot no signal shadow wedge
+        self._eye_value = 0
+        self._show_signal(self._eye_value)  # Plot no signal shadow wedge
         return
 
     @property
@@ -209,7 +211,14 @@ class MagicEye:
 
     @value.setter
     def value(self, signal=0):
-        self._show_signal(signal)
+        signal = min(max(0, signal), 2.0)
+        move_count = 10
+        step = (signal - self._eye_value) / move_count
+        for i in range(0, move_count):
+            self._show_signal(self._eye_value + (i * step))  # linear easing
+            #self._show_signal(self._eye_value + (ease.circular_easeinout(i / move_count) * (signal - self._eye_value)))
+        self._eye_value = signal
+        self._show_signal(self._eye_value)
 
     def _show_signal(self, signal=0):
         """Plot the MagicEye shadow wedge. Input is a positive floating point
@@ -220,10 +229,9 @@ class MagicEye:
         :param eye_normal: The normalized floating point signal  value for the
         shadow wedge. Defaults to 0 (no signal)."""
 
-        self._eye_value = signal
-        self._eye_value = min(max(0, self._eye_value), 2.0)
+        signal = min(max(0, signal), 2.0)
 
-        if self._eye_value > 1.0:
+        if signal > 1.0:
             self._eye_color = self._overlap_palette
         else:
             self._eye_color = self._shadow_palette
@@ -233,12 +241,12 @@ class MagicEye:
             self._center_norm[0], self._center_norm[1]
         )
         self._x1, self._y1 = self.dial_to_pixel(
-            0.35 + (self._eye_value * 0.15),
+            0.35 + (signal * 0.15),
             center=self._center,
             radius=self._outside_radius,
         )
         self._x2, self._y2 = self.dial_to_pixel(
-            0.65 - (self._eye_value * 0.15),
+            0.65 - (signal * 0.15),
             center=self._center,
             radius=self._outside_radius,
         )
