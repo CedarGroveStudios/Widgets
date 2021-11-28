@@ -94,12 +94,11 @@ class MagicEye:
         self._cathode_palette[0] = Colors.BLACK
 
         # Define green phosphor target anode
-        self._sx, self._sy = self._center
         self.target_anode = vectorio.Circle(
             pixel_shader=self._anode_palette,
             radius=self._outside_radius,
-            x=self._sx,
-            y=self._sy,
+            x=self._center[0],
+            y=self._center[1],
         )
         self._anode_group.append(self.target_anode)
 
@@ -145,50 +144,24 @@ class MagicEye:
         )
         self._eye_group.append(self.eye)
 
-        # Define bezel: corner wedges
-        self._corner_side = int(
-            sqrt(2 * pow(self._outside_radius, 2)) - self._outside_radius
-        )
-        self._corner_hyp = int(sqrt(2 * pow(self._corner_side, 2)))
-        self._corner_x = self._center[0] - self._outside_radius
-        self._corner_y = self._center[1] + self._outside_radius
-        self._wedge_a = vectorio.Polygon(
-            pixel_shader=self._bezel_palette,
-            points=[
-                (self._corner_x, self._corner_y),
-                (self._corner_x + self._corner_hyp, self._corner_y),
-                (self._corner_x, self._corner_y - self._corner_hyp),
-            ],
-        )
-        self._bezel_group.append(self._wedge_a)
-
-        self._corner_x = self._center[0] + self._outside_radius
-        self._wedge_b = vectorio.Polygon(
-            pixel_shader=self._bezel_palette,
-            points=[
-                (self._corner_x, self._corner_y),
-                (self._corner_x - self._corner_hyp, self._corner_y),
-                (self._corner_x, self._corner_y - self._corner_hyp),
-            ],
-        )
-        self._bezel_group.append(self._wedge_b)
-
-        # Define bezel: doughnut
-        # Future: REPAIR displayio circle FUNCTION FOR LARGER STROKE VALUES
-        self._doughnut_gap = (
-            sqrt(pow(self._outside_radius, 2) + pow(1 - self._corner_hyp, 2))
-        ) - self._outside_radius
-        self._doughnut_gap = int(round(self._doughnut_gap, 0))
-
-        bezel_resolution = (self._outside_radius + self._doughnut_gap)
-        bezel_range_min = int(round(0.30 * bezel_resolution, 0))
-        bezel_range_max = int(round(0.70 * bezel_resolution, 0))
+        # Define bezel
+        bezel_resolution = self._outside_radius * 2
+        bezel_range_min = int(round(0.25 * bezel_resolution, 0))
+        bezel_range_max = int(round(0.75 * bezel_resolution, 0))
+        bezel_min = self.dial_to_pixel(0.25, center=self._center, radius=self._outside_radius)
+        bezel_max = self.dial_to_pixel(0.75, center=self._center, radius=self._outside_radius)
 
         self._points = []
         for i in range(bezel_range_min, bezel_range_max + 1):
-            self._points.append(self.dial_to_pixel(i / bezel_resolution, center=self._center, radius=self._outside_radius - 1))
-        for i in range(bezel_range_max, bezel_range_min - 1, -1):
-            self._points.append(self.dial_to_pixel(i / bezel_resolution, center=self._center, radius=self._outside_radius + self._doughnut_gap))
+            self._points.append(
+                self.dial_to_pixel(
+                    i / bezel_resolution,
+                    center=self._center,
+                    radius=self._outside_radius,
+                )
+            )
+        self._points.append((bezel_max[0], self._center[1] + self._outside_radius + 2))
+        self._points.append((bezel_min[0], self._center[1] + self._outside_radius + 2))
         self._doughnut_mask = vectorio.Polygon(
             pixel_shader=self._bezel_palette,
             points=self._points,
@@ -201,7 +174,7 @@ class MagicEye:
             self._outside_radius,
             fill=None,
             outline=self._bezel_color,
-            stroke=1,
+            stroke=2,
         )
         self._bezel_group.append(self._bezel_mask)
 
@@ -211,8 +184,8 @@ class MagicEye:
         self._cathode_shield = vectorio.Circle(
             pixel_shader=self._cathode_palette,
             radius=self._shield_radius,
-            x=self._sx,
-            y=self._sy,
+            x=self._center[0],
+            y=self._center[1],
         )
         self._bezel_group.append(self._cathode_shield)
 
@@ -265,7 +238,6 @@ class MagicEye:
             center=self._center,
             radius=self._outside_radius,
         )
-
         self._points = [
             self._center,
             (self._x1, self._y1),
@@ -295,8 +267,8 @@ class MagicEye:
         (x,y pixels) and radius (pixels)."""
         self._rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
         self._rads = self._rads + (pi / 2)  # rotate axis counterclockwise
-        x = int(center[0] + (cos(self._rads) * radius))
-        y = int(center[1] - (sin(self._rads) * radius))
+        x = center[0] + int(cos(self._rads) * radius)
+        y = center[1] - int(sin(self._rads) * radius)
         return x, y
 
     def ortho_to_pixel(self, x, y, size=1.0):
