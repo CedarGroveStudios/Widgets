@@ -1,13 +1,12 @@
 # 10-Segment Bargraph widget
 # based on the Lucky Light LED 10-Segment LED Gauge Bar and LML391x controllers
-# 2021-11-20 v0.6
+# 2021-11-28 v0.7
 
 import displayio
-from adafruit_display_shapes.rect import Rect
-from adafruit_display_shapes.triangle import Triangle
+import vectorio
 
 
-class Palette:
+class Colors:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     GRAY = 0x508080
@@ -56,35 +55,51 @@ class Bargraph:
         self._chips = displayio.Group()
         self._bars = displayio.Group()
 
+        self._dip_pkg_palette = displayio.Palette(1)
+        self._dip_pkg_palette[0] = Colors.GRAY_DK
+
+        self._blk_palette = displayio.Palette(1)
+        self._blk_palette[0] = Colors.BLACK
+
+        self._red_palette = displayio.Palette(1)
+        self._red_palette[0] = Colors.RED
+        self._yel_palette = displayio.Palette(1)
+        self._yel_palette[0] = Colors.YELLOW
+        self._grn_palette = displayio.Palette(1)
+        self._grn_palette[0] = Colors.GREEN_LED
+
         for chip in range(0, self._units):
             self._upper_left_corner = (self._origin[0] + (100 * chip), self._origin[1])
-            self._dip_package = Rect(
-                self._upper_left_corner[0],
-                self._upper_left_corner[1],
-                100,
-                40,
-                fill=Palette.GRAY_DK,
+
+            self._dip_pkg = vectorio.Rectangle(
+                pixel_shader=self._dip_pkg_palette,
+                x=self._upper_left_corner[0],
+                y=self._upper_left_corner[1],
+                width=100,
+                height=40,
             )
-            self._chips.append(self._dip_package)
-            self._dip_index = Triangle(
-                self._upper_left_corner[0],
-                39 + self._upper_left_corner[1],
-                self._upper_left_corner[0],
-                35 + self._upper_left_corner[1],
-                4 + self._upper_left_corner[0],
-                39 + self._upper_left_corner[1],
-                fill=Palette.BLACK,
+            self._chips.append(self._dip_pkg)
+
+            self._points = [
+                (self._upper_left_corner[0], 40 + self._upper_left_corner[1]),
+                (self._upper_left_corner[0], 35 + self._upper_left_corner[1]),
+                (4 + self._upper_left_corner[0], 40 + self._upper_left_corner[1]),
+            ]
+            self._dip_idx = vectorio.Polygon(
+                pixel_shader=self._blk_palette,
+                points=self._points,
             )
-            self._chips.append(self._dip_index)
+            self._chips.append(self._dip_idx)
+
             for i in range(0, 10):
-                self._bar = Rect(
-                    self._upper_left_corner[0] + 2 + (i * 10),
-                    10 + self._upper_left_corner[1],
-                    6,
-                    20,
-                    fill=Palette.BLACK,
-                    outline=None,
+                self._bar = vectorio.Rectangle(
+                    pixel_shader=self._blk_palette,
+                    x=self._upper_left_corner[0] + 2 + (i * 10),
+                    y=10 + self._upper_left_corner[1],
+                    width=6,
+                    height=20,
                 )
+
                 self._bars.append(self._bar)
         self._bargraph_group.append(self._chips)
         self._bargraph_group.append(self._bars)
@@ -127,16 +142,17 @@ class Bargraph:
     def _show_signal(self, signal=None):
         self._signal = signal
         self._bar = int(round(self._signal * (self._units * 10), 0))
+
         for i in range(0, self._units * 10):
             if i <= self._bar and self._range == "VU":
                 if i > ((self._units - 1) * 10) + 6:
-                    self._bars[i].fill = Palette.RED
+                    self._bars[i].pixel_shader = self._red_palette
                 elif i == ((self._units - 1) * 10) + 6:
-                    self._bars[i].fill = Palette.YELLOW
+                    self._bars[i].pixel_shader = self._yel_palette
                 else:
-                    self._bars[i].fill = Palette.GREEN_LED
+                    self._bars[i].pixel_shader = self._grn_palette
             else:
-                self._bars[i].fill = Palette.BLACK
+                self._bars[i].pixel_shader = self._blk_palette
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display
@@ -151,8 +167,8 @@ class Bargraph:
         (x,y pixels) and radius (pixels)."""
         self._rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
         self._rads = self._rads + (pi / 2)  # rotate axis counterclockwise
-        x = int(center[0] + (cos(self._rads) * radius))
-        y = int(center[1] - (sin(self._rads) * radius))
+        x = center[0] + int(cos(self._rads) * radius)
+        y = center[1] - int(sin(self._rads) * radius)
         return x, y
 
     def ortho_to_pixel(self, x, y, size=1.0):
