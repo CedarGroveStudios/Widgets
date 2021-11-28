@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-11-26 v1.3
+# 2021-11-27 v2.0
 
 import displayio
 import vectorio
@@ -120,9 +120,6 @@ class MagicEye:
         self._anode_group.append(self.shadow)
 
         # Combined shadow wedge and tarsus polygon points
-        self._x0, self._y0 = self.display_to_pixel(
-            self._center_norm[0], self._center_norm[1]
-        )
         self._x1, self._y1 = self.dial_to_pixel(
             0.35 + (0 * 0.15),
             center=self._center,
@@ -133,8 +130,9 @@ class MagicEye:
             center=self._center,
             radius=self._outside_radius,
         )
+
         self._points = [
-            (self._x0, self._y0),
+            self._center,
             (self._x1, self._y1),
             (self._x1, self._center[1] + self._outside_radius),
             (self._x2, self._center[1] + self._outside_radius),
@@ -161,8 +159,6 @@ class MagicEye:
                 (self._corner_x + self._corner_hyp, self._corner_y),
                 (self._corner_x, self._corner_y - self._corner_hyp),
             ],
-            x=1,
-            y=1,
         )
         self._bezel_group.append(self._wedge_a)
 
@@ -174,8 +170,6 @@ class MagicEye:
                 (self._corner_x - self._corner_hyp, self._corner_y),
                 (self._corner_x, self._corner_y - self._corner_hyp),
             ],
-            x=1,
-            y=1,
         )
         self._bezel_group.append(self._wedge_b)
 
@@ -184,22 +178,32 @@ class MagicEye:
         self._doughnut_gap = (
             sqrt(pow(self._outside_radius, 2) + pow(1 - self._corner_hyp, 2))
         ) - self._outside_radius
+        self._doughnut_gap = int(round(self._doughnut_gap, 0))
 
-        for i in range(1, self._doughnut_gap):
-            self._color = self._bezel_color
-            if i == 1:
-                self._color = Colors.GREEN_DK
+        bezel_resolution = (self._outside_radius + self._doughnut_gap)
+        bezel_range_min = int(round(0.30 * bezel_resolution, 0))
+        bezel_range_max = int(round(0.70 * bezel_resolution, 0))
 
-            self._rx, self._ry = self.display_to_pixel(0.00, self._radius_norm)
-            self._doughnut_mask = Circle(
-                self._sx,
-                self._sy,
-                self._outside_radius + i,
-                fill=None,
-                outline=self._color,
-                stroke=2,
-            )
-            self._bezel_group.append(self._doughnut_mask)
+        self._points = []
+        for i in range(bezel_range_min, bezel_range_max + 1):
+            self._points.append(self.dial_to_pixel(i / bezel_resolution, center=self._center, radius=self._outside_radius - 1))
+        for i in range(bezel_range_max, bezel_range_min - 1, -1):
+            self._points.append(self.dial_to_pixel(i / bezel_resolution, center=self._center, radius=self._outside_radius + self._doughnut_gap))
+        self._doughnut_mask = vectorio.Polygon(
+            pixel_shader=self._bezel_palette,
+            points=self._points,
+        )
+        self._bezel_group.append(self._doughnut_mask)
+
+        self._bezel_mask = Circle(
+            self._center[0],
+            self._center[1],
+            self._outside_radius,
+            fill=None,
+            outline=self._bezel_color,
+            stroke=1,
+        )
+        self._bezel_group.append(self._bezel_mask)
 
         # Define cathode light shield
         self._cathode_shield_group = displayio.Group()
@@ -251,9 +255,6 @@ class MagicEye:
         shadow wedge. Defaults to 0 (no signal)."""
 
         # Combined shadow wedge and tarsus polygon points
-        self._x0, self._y0 = self.display_to_pixel(
-            self._center_norm[0], self._center_norm[1]
-        )
         self._x1, self._y1 = self.dial_to_pixel(
             0.35 + (signal * 0.15),
             center=self._center,
@@ -264,8 +265,9 @@ class MagicEye:
             center=self._center,
             radius=self._outside_radius,
         )
+
         self._points = [
-            (self._x0, self._y0),
+            self._center,
             (self._x1, self._y1),
             (self._x1, self._center[1] + self._outside_radius),
             (self._x2, self._center[1] + self._outside_radius),
