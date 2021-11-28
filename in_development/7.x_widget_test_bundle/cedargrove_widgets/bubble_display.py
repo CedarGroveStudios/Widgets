@@ -1,8 +1,9 @@
 # LED bubble display widget
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-11-20 v0.6
+# 2021-11-29 v0.65
 
 import displayio
+import vectorio
 from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
@@ -32,7 +33,7 @@ NUMBERS = {
 }
 
 
-class Palette:
+class Colors:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     RED = 0xFF0000
@@ -59,7 +60,7 @@ class BubbleDisplay:
                 self._upper_left_corner[1],
                 60,
                 25,
-                fill=Palette.RED_PKG,
+                fill=Colors.RED_PKG,
             )
             self._cluster.append(self._dip_package)
 
@@ -68,7 +69,7 @@ class BubbleDisplay:
                 24 + self._upper_left_corner[1],
                 2,
                 2,
-                fill=Palette.BLACK,
+                fill=Colors.BLACK,
             )
             self._cluster.append(self._dip_index)
 
@@ -79,8 +80,8 @@ class BubbleDisplay:
                     15,
                     25,
                     7,
-                    fill=Palette.RED_BKG,
-                    outline=Palette.RED_LENS,
+                    fill=Colors.RED_BKG,
+                    outline=Colors.RED_LENS,
                 )
                 self._cluster.append(self._lens)
 
@@ -89,7 +90,7 @@ class BubbleDisplay:
                     6 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
                     6 + self._upper_left_corner[1],
-                    color=Palette.RED_BKG,
+                    color=Colors.RED_BKG,
                 )
                 self._digits.append(self._a)
 
@@ -98,7 +99,7 @@ class BubbleDisplay:
                     6 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) + 6,
                     12 + self._upper_left_corner[1],
-                    color=Palette.RED_BKG,
+                    color=Colors.RED_BKG,
                 )
                 self._digits.append(self._b)
 
@@ -107,7 +108,7 @@ class BubbleDisplay:
                     12 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
                     18 + self._upper_left_corner[1],
-                    color=Palette.RED_BKG,
+                    color=Colors.RED_BKG,
                 )
                 self._digits.append(self._c)
 
@@ -116,7 +117,7 @@ class BubbleDisplay:
                     18 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
                     18 + self._upper_left_corner[1],
-                    color=Palette.RED_BKG,
+                    color=Colors.RED_BKG,
                 )
                 self._digits.append(self._d)
 
@@ -125,7 +126,7 @@ class BubbleDisplay:
                     12 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) - 1,
                     18 + self._upper_left_corner[1],
-                    color=Palette.RED_BKG,
+                    color=Colors.RED_BKG,
                 )
                 self._digits.append(self._e)
 
@@ -134,7 +135,7 @@ class BubbleDisplay:
                     6 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15),
                     12 + self._upper_left_corner[1],
-                    color=Palette.RED_BKG,
+                    color=Colors.RED_BKG,
                 )
                 self._digits.append(self._f)
 
@@ -143,7 +144,7 @@ class BubbleDisplay:
                     12 + self._upper_left_corner[1],
                     4 + self._upper_left_corner[0] + (i * 15) + 6,
                     12 + self._upper_left_corner[1],
-                    color=Palette.RED_BKG,
+                    color=Colors.RED_BKG,
                 )
                 self._digits.append(self._g)
 
@@ -152,7 +153,7 @@ class BubbleDisplay:
                     18 + self._upper_left_corner[1],
                     2,
                     2,
-                    fill=Palette.RED_BKG,
+                    fill=Colors.RED_BKG,
                 )
                 self._digits.append(self._dp)
 
@@ -216,11 +217,11 @@ class BubbleDisplay:
                 self._decode = NUMBERS[' ']
             for self._segment in range(0, 8):
                 if self._decode & pow(2, self._segment):
-                    self._digits[(self._digit * 8) + self._segment].color = Palette.RED
-                    self._digits[(self._digit * 8) + self._segment].fill = Palette.RED
+                    self._digits[(self._digit * 8) + self._segment].color = Colors.RED
+                    self._digits[(self._digit * 8) + self._segment].fill = Colors.RED
                 else:
-                    self._digits[(self._digit * 8) + self._segment].color = Palette.RED_BKG
-                    self._digits[(self._digit * 8) + self._segment].fill = Palette.RED_BKG
+                    self._digits[(self._digit * 8) + self._segment].color = Colors.RED_BKG
+                    self._digits[(self._digit * 8) + self._segment].fill = Colors.RED_BKG
 
 
     def _show_value(self, value=None, mode='Normal'):
@@ -247,9 +248,9 @@ class BubbleDisplay:
 
         # clear all decimal points and plot the current point
         for self._digit in range(0, self._units * 4):
-            self._digits[(self._digit * 8) + 7].fill = Palette.RED_BKG
+            self._digits[(self._digit * 8) + 7].fill = Colors.RED_BKG
         if self._dp_digit > -1:
-            self._digits[(self._dp_digit * 8) + 7].fill = Palette.RED
+            self._digits[(self._dp_digit * 8) + 7].fill = Colors.RED
         return
 
 
@@ -266,8 +267,8 @@ class BubbleDisplay:
         (x,y pixels) and radius (pixels)."""
         self._rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
         self._rads = self._rads + (pi / 2)  # rotate axis counterclockwise
-        x = int(center[0] + (cos(self._rads) * radius))
-        y = int(center[1] - (sin(self._rads) * radius))
+        x = center[0] + int(cos(self._rads) * radius)
+        y = center[1] - int(sin(self._rads) * radius)
         return x, y
 
     def ortho_to_pixel(self, x, y, size=1.0):
