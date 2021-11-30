@@ -1,5 +1,5 @@
 # NeoPixel widget
-# 2021-11-29 v0.7
+# 2021-11-30 v0.7
 
 import displayio
 import vectorio
@@ -23,35 +23,35 @@ class NeoPixel:
         self._neopixel_units = units
         self._origin = center
 
-        self._gray_palette = displayio.Palette(1)
-        self._gray_palette[0] = Colors.GRAY
-        self._gray_dk_palette = displayio.Palette(1)
-        self._gray_dk_palette[0] = Colors.GRAY_DK
+        gray_palette = displayio.Palette(1)
+        gray_palette[0] = Colors.GRAY
+        gray_dk_palette = displayio.Palette(1)
+        gray_dk_palette[0] = Colors.GRAY_DK
 
         for chip in range(0, self._neopixel_units):
-            self._upper_left_corner = (self._origin[0] + (15 * chip), self._origin[1])
+            upper_left_corner = (self._origin[0] + (15 * chip), self._origin[1])
 
-            self._pkg = vectorio.Rectangle(
-                pixel_shader=self._gray_dk_palette,
-                x=self._upper_left_corner[0],
-                y=self._upper_left_corner[1],
+            pkg = vectorio.Rectangle(
+                pixel_shader=gray_dk_palette,
+                x=upper_left_corner[0],
+                y=upper_left_corner[1],
                 width=15,
                 height=15,
             )
-            self._neo_pkg.append(self._pkg)
+            self._neo_pkg.append(pkg)
 
-            self._pkg_index = vectorio.Rectangle(
-                pixel_shader=self._gray_palette,
-                x=self._upper_left_corner[0],
-                y=14 + self._upper_left_corner[1],
+            pkg_index = vectorio.Rectangle(
+                pixel_shader=gray_palette,
+                x=upper_left_corner[0],
+                y=14 + upper_left_corner[1],
                 width=1,
                 height=1,
             )
-            self._neo_pkg.append(self._pkg_index)
+            self._neo_pkg.append(pkg_index)
 
             self._reflect_base = Circle(
-                self._upper_left_corner[0] + 7,
-                self._upper_left_corner[1] + 7,
+                upper_left_corner[0] + 7,
+                upper_left_corner[1] + 7,
                 6,
                 fill=Colors.BLACK,
                 outline=None,

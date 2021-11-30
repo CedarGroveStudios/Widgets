@@ -1,6 +1,6 @@
 # LED bubble display widget
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-11-30 v0.65
+# 2021-11-30 v0.66
 
 import displayio
 import vectorio
@@ -8,28 +8,29 @@ from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 
-# 8-bit to 7 segment; dp g f e d c b a
+# 8-bit to 7 segment
+#  bits: dp g f e d c b a
 NUMBERS = {
-    "0": 0b00111111,  # 0
-    "1": 0b00000110,  # 1
-    "2": 0b01011011,  # 2
-    "3": 0b01001111,  # 3
-    "4": 0b01100110,  # 4
-    "5": 0b01101101,  # 5
-    "6": 0b01111101,  # 6
-    "7": 0b00000111,  # 7
-    "8": 0b01111111,  # 8
-    "9": 0b01101111,  # 9
-    "a": 0b01110111,  # a
-    "b": 0b01111100,  # b
-    "c": 0b00111001,  # C
-    "d": 0b01011110,  # d
-    "e": 0b01111001,  # E
-    "f": 0b01110001,  # F
-    "-": 0b01000000,  # -
-    ".": 0b10000000,  # .
+    '0': 0b00111111,  # 0
+    '1': 0b00000110,  # 1
+    '2': 0b01011011,  # 2
+    '3': 0b01001111,  # 3
+    '4': 0b01100110,  # 4
+    '5': 0b01101101,  # 5
+    '6': 0b01111101,  # 6
+    '7': 0b00000111,  # 7
+    '8': 0b01111111,  # 8
+    '9': 0b01101111,  # 9
+    'a': 0b01110111,  # a
+    'b': 0b01111100,  # b
+    'c': 0b00111001,  # C
+    'd': 0b01011110,  # d
+    'e': 0b01111001,  # E
+    'f': 0b01110001,  # F
+    '-': 0b01000000,  # -
+    '.': 0b10000000,  # .
     " ": 0b00000000,  # <space>
-    "x": 0b00001000,  # _ (replace x with underscore for hexadecimal text)
+    'x': 0b00001000,  # _ (replace x with underscore for hexadecimal text)
 }
 
 
@@ -44,7 +45,8 @@ class Colors:
 
 
 class BubbleDisplay:
-    def __init__(self, units=0, center=(0, 0), size=1, display_size=(None, None)):
+    def __init__(self, units=0, mode='Normal', center=(0, 0), size=1, display_size=(None, None)):
+        self._mode = mode
         self._size = size
         self._cluster_group = displayio.Group(scale=self._size)
         self._cluster = displayio.Group(scale=size)
@@ -54,108 +56,108 @@ class BubbleDisplay:
         self._origin = center
 
         for chip in range(0, self._units):
-            self._upper_left_corner = (self._origin[0] + (60 * chip), self._origin[1])
-            self._dip_package = Rect(
-                self._upper_left_corner[0],
-                self._upper_left_corner[1],
+            upper_left_corner = (self._origin[0] + (60 * chip), self._origin[1])
+            dip_package = Rect(
+                upper_left_corner[0],
+                upper_left_corner[1],
                 60,
                 25,
                 fill=Colors.RED_PKG,
             )
-            self._cluster.append(self._dip_package)
+            self._cluster.append(dip_package)
 
-            self._dip_index = Rect(
-                2 + self._upper_left_corner[0],
-                24 + self._upper_left_corner[1],
+            dip_index = Rect(
+                2 + upper_left_corner[0],
+                24 + upper_left_corner[1],
                 2,
                 2,
                 fill=Colors.BLACK,
             )
-            self._cluster.append(self._dip_index)
+            self._cluster.append(dip_index)
 
             for i in range(0, 4):
-                self._lens = RoundRect(
-                    self._upper_left_corner[0] + (i * 15),
-                    0 + self._upper_left_corner[1],
+                lens = RoundRect(
+                    upper_left_corner[0] + (i * 15),
+                    0 + upper_left_corner[1],
                     15,
                     25,
                     7,
                     fill=Colors.RED_BKG,
                     outline=Colors.RED_LENS,
                 )
-                self._cluster.append(self._lens)
+                self._cluster.append(lens)
 
-                self._a = Line(
-                    4 + self._upper_left_corner[0] + (i * 15) + 1,
-                    6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
-                    6 + self._upper_left_corner[1],
+                seg_a = Line(
+                    4 + upper_left_corner[0] + (i * 15) + 1,
+                    6 + upper_left_corner[1],
+                    4 + upper_left_corner[0] + (i * 15) + 6 + 1,
+                    6 + upper_left_corner[1],
                     color=Colors.RED_BKG,
                 )
-                self._digits.append(self._a)
+                self._digits.append(seg_a)
 
-                self._b = Line(
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
-                    6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6,
-                    12 + self._upper_left_corner[1],
+                seg_b = Line(
+                    4 + upper_left_corner[0] + (i * 15) + 6 + 1,
+                    6 + upper_left_corner[1],
+                    4 + upper_left_corner[0] + (i * 15) + 6,
+                    12 + upper_left_corner[1],
                     color=Colors.RED_BKG,
                 )
-                self._digits.append(self._b)
+                self._digits.append(seg_b)
 
-                self._c = Line(
-                    4 + self._upper_left_corner[0] + (i * 15) + 6,
-                    12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
-                    18 + self._upper_left_corner[1],
+                seg_c = Line(
+                    4 + upper_left_corner[0] + (i * 15) + 6,
+                    12 + upper_left_corner[1],
+                    4 + upper_left_corner[0] + (i * 15) + 6 - 1,
+                    18 + upper_left_corner[1],
                     color=Colors.RED_BKG,
                 )
-                self._digits.append(self._c)
+                self._digits.append(seg_c)
 
-                self._d = Line(
-                    4 + self._upper_left_corner[0] + (i * 15) - 1,
-                    18 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 - 1,
-                    18 + self._upper_left_corner[1],
+                seg_d = Line(
+                    4 + upper_left_corner[0] + (i * 15) - 1,
+                    18 + upper_left_corner[1],
+                    4 + upper_left_corner[0] + (i * 15) + 6 - 1,
+                    18 + upper_left_corner[1],
                     color=Colors.RED_BKG,
                 )
-                self._digits.append(self._d)
+                self._digits.append(seg_d)
 
-                self._e = Line(
-                    4 + self._upper_left_corner[0] + (i * 15),
-                    12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) - 1,
-                    18 + self._upper_left_corner[1],
+                seg_e = Line(
+                    4 + upper_left_corner[0] + (i * 15),
+                    12 + upper_left_corner[1],
+                    4 + upper_left_corner[0] + (i * 15) - 1,
+                    18 + upper_left_corner[1],
                     color=Colors.RED_BKG,
                 )
-                self._digits.append(self._e)
+                self._digits.append(seg_e)
 
-                self._f = Line(
-                    4 + self._upper_left_corner[0] + (i * 15) + 1,
-                    6 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15),
-                    12 + self._upper_left_corner[1],
+                seg_f = Line(
+                    4 + upper_left_corner[0] + (i * 15) + 1,
+                    6 + upper_left_corner[1],
+                    4 + upper_left_corner[0] + (i * 15),
+                    12 + upper_left_corner[1],
                     color=Colors.RED_BKG,
                 )
-                self._digits.append(self._f)
+                self._digits.append(seg_f)
 
-                self._g = Line(
-                    4 + self._upper_left_corner[0] + (i * 15),
-                    12 + self._upper_left_corner[1],
-                    4 + self._upper_left_corner[0] + (i * 15) + 6,
-                    12 + self._upper_left_corner[1],
+                seg_g = Line(
+                    4 + upper_left_corner[0] + (i * 15),
+                    12 + upper_left_corner[1],
+                    4 + upper_left_corner[0] + (i * 15) + 6,
+                    12 + upper_left_corner[1],
                     color=Colors.RED_BKG,
                 )
-                self._digits.append(self._g)
+                self._digits.append(seg_g)
 
-                self._dp = Rect(
-                    4 + self._upper_left_corner[0] + (i * 15) + 6 + 1,
-                    18 + self._upper_left_corner[1],
+                seg_dp = Rect(
+                    4 + upper_left_corner[0] + (i * 15) + 6 + 1,
+                    18 + upper_left_corner[1],
                     2,
                     2,
                     fill=Colors.RED_BKG,
                 )
-                self._digits.append(self._dp)
+                self._digits.append(seg_dp)
 
         self._cluster_group.append(self._cluster)
         self._cluster_group.append(self._digits)
@@ -177,7 +179,7 @@ class BubbleDisplay:
         return self._value
 
     @value.setter
-    def value(self, value=None, mode="Normal"):
+    def value(self, value=None, mode='Normal'):
         self._show_value(value, mode)
 
     @property
@@ -186,7 +188,7 @@ class BubbleDisplay:
         return self._text
 
     @text.setter
-    def text(self, text=""):
+    def text(self, text=''):
         self._show_text(text)
 
     # @property
@@ -204,61 +206,49 @@ class BubbleDisplay:
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    def _show_text(self, text=""):
-        self._text = text
-        self._text = self._text[0 : self._units * 4]  # truncate to left-most digits
-        self._text = (" " * ((self._units * 4) - len(self._text))) + self._text
+    def _show_text(self, text=''):
+        text = text[0 : self._units * 4]  # truncate to left-most digits
+        text = (' ' * ((self._units * 4) - len(text))) + text
 
-        for self._digit in range(0, self._units * 4):
-            if self._text[self._digit] in NUMBERS:
-                self._decode = NUMBERS[self._text[self._digit]]
+        for _digit in range(0, self._units * 4):
+            if text[_digit] in NUMBERS:
+                _decode = NUMBERS[text[_digit]]
             else:
-                self._decode = NUMBERS[" "]
-            for self._segment in range(0, 8):
-                if self._decode & pow(2, self._segment):
-                    self._digits[(self._digit * 8) + self._segment].color = Colors.RED
-                    self._digits[(self._digit * 8) + self._segment].fill = Colors.RED
+                _decode = NUMBERS[' ']
+            for _segment in range(0, 8):
+                if _decode & pow(2, _segment):
+                    self._digits[(_digit * 8) + _segment].color = Colors.RED
+                    self._digits[(_digit * 8) + _segment].fill = Colors.RED
                 else:
-                    self._digits[
-                        (self._digit * 8) + self._segment
-                    ].color = Colors.RED_BKG
-                    self._digits[
-                        (self._digit * 8) + self._segment
-                    ].fill = Colors.RED_BKG
+                    self._digits[(_digit * 8) + _segment].color = Colors.RED_BKG
+                    self._digits[(_digit * 8) + _segment].fill = Colors.RED_BKG
 
-    def _show_value(self, value=None, mode="Normal"):
-        """ use 'HP-35' for decimal point between digits """
-        self._value = value
+    def _show_value(self, value=None, mode='Normal'):
+        """ use mode='HP-35' for decimal point between digits """
         self._mode = mode
-        if self._value == None:
-            self._display = ""
+        if value == None:
+            _display = ''
         else:
-            self._display = str(self._value)
+            _display = str(value)
 
         # if value string is larger than can be displayed, show dashes
-        if len(self._display) > self._units * 4:
-            self._display = "-" * self._units * 4
+        if len(_display) > self._units * 4:
+            _display = '-' * self._units * 4
         else:
-            self._display = (
-                " " * ((self._units * 4) - len(self._display))
-            ) + self._display
+            _display = (' ' * ((self._units * 4) - len(_display))) + _display
 
         # locate decimal point and remove from display string
-        self._dp_digit = self._display.find(".")
-        if self._dp_digit > -1 and self._mode != "HP-35":
-            self._display = (
-                " "
-                + self._display[0 : self._dp_digit]
-                + self._display[self._dp_digit + 1 :]
-            )
+        dp_digit = _display.find(".")
+        if dp_digit > -1 and self._mode != 'HP-35':
+            _display = ' ' + _display[0 : dp_digit] + _display[dp_digit + 1 :]
 
-        self._show_text(self._display)
+        self._show_text(_display)
 
         # clear all decimal points and plot the current point
-        for self._digit in range(0, self._units * 4):
-            self._digits[(self._digit * 8) + 7].fill = Colors.RED_BKG
-        if self._dp_digit > -1:
-            self._digits[(self._dp_digit * 8) + 7].fill = Colors.RED
+        for digit in range(0, self._units * 4):
+            self._digits[(digit * 8) + 7].fill = Colors.RED_BKG
+        if dp_digit > -1:
+            self._digits[(dp_digit * 8) + 7].fill = Colors.RED
         return
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
