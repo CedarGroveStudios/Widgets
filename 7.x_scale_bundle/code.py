@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale_example.py
-# 2021-11-20 v1.0
+# 2021-11-29 v1.1
 
 # For host board with integral display
 
@@ -24,10 +24,10 @@ display.rotation = 0
 
 display_group = displayio.Group()
 
-scale_1 = Scale(max_scale=100, center=(0.85, 0.30), size=.25)
+scale_1 = Scale(max_scale=100, alarm_2=0.33, center=(0.85, 0.30), size=.25)
 display_group.append(scale_1.display_group)
 
-scale_2 = Scale(center=(0.5, 0.5), size=0.5)
+scale_2 = Scale(alarm_1=0.25, alarm_2=0.45, center=(0.5, 0.5), size=0.5)
 display_group.append(scale_2.display_group)
 
 scale_1.value = (0, 0)
@@ -46,7 +46,15 @@ while True:
     for i in range(125, 0, -4):
         m = i / 100
         scale_2.value = (0, m)
-    print(f'frame: {(time.monotonic() - t0):5.2f} sec    free memory: {gc.mem_free()} bytes')
+
+    free_memory = gc.mem_free()
+    frame = time.monotonic() - t0
+    print(
+        f'frame: {frame:5.2f} sec   free memory: {free_memory} bytes'
+    )
+    print(
+        (frame, (free_memory/1000))
+    )
 
     m0 = 0
     for i in range(0, 100):

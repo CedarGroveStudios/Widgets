@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-11-20 v1.0
+# 2021-11-29 v1.1
 
 import displayio
+import vectorio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_bitmap_font import bitmap_font
 from adafruit_display_shapes.circle import Circle
@@ -14,7 +15,7 @@ from adafruit_display_shapes.triangle import Triangle
 from adafruit_display_text.label import Label
 
 
-class Palette:
+class Colors:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     BLUE = 0x0000FF
@@ -29,13 +30,13 @@ class Palette:
 
 class Scale:
     def __init__(
-        self, max_scale=100, center=(0.50, 0.50), size=0.5, display_size=(None, None)
+        self, max_scale=100, alarm_1=None, alarm_2=None, center=(0.50, 0.50), size=0.5, display_size=(None, None)
     ):
         """Instantiate the scale graphic object for DisplayIO devices.
         Builds a displayio group representing the scale widget.
 
         :param max_scale: The maximum scale integer value. Used to label the
-        ten major dial hash marks.
+        ten major dial hashmarks.
         :param center: The dial center x,y tuple in normalized display units.
         :param size: The widget size factor relative to the display's
         shorter axis.
@@ -57,6 +58,8 @@ class Scale:
             self.HEIGHT = display_size[1]
 
         self._max_scale = max_scale
+        self._alarm_1 = alarm_1
+        self._alarm_2 = alarm_2
 
         self._size = size
         # Define object center relative to normalized display and pixel coordinates
@@ -77,6 +80,7 @@ class Scale:
         self._major_radius = int(round(self._outside_radius * 0.88, 0))
         self._minor_radius = int(round(self._outside_radius * 0.93, 0))
         self._label_radius = int(round(self._outside_radius * 0.70, 0))
+        self._point_radius = int(round(self._outside_radius * 0.06, 0))
 
         self._sx0, self._sy0 = self._center
         self._sx1, self._sy1 = self.ortho_to_pixel(-0.49, -0.51, self._size)
@@ -88,8 +92,8 @@ class Scale:
             self._sy1,
             self._sx2,
             self._sy2,
-            fill=Palette.GRAY,
-            outline=Palette.BLACK,
+            fill=Colors.GRAY,
+            outline=Colors.BLACK,
         )
         self._scale_group.append(self._base)
 
@@ -100,22 +104,22 @@ class Scale:
             width=self.ortho_dist_to_pixel(1.0, self._size),
             height=self.ortho_dist_to_pixel(0.08, self._size),
             r=int(10 * self._size),
-            fill=Palette.GRAY,
-            outline=Palette.BLACK,
+            fill=Colors.GRAY,
+            outline=Colors.BLACK,
         )
         self._scale_group.append(self._foot)
 
         # Define moveable plate graphic
         self._plate_y = 0.65
-        self._sx, self._sy = self.ortho_to_pixel(-0.05, self._plate_y, self._size)
+        self._sx, self._sy = self.ortho_to_pixel(-0.07, self._plate_y, self._size)
         self.riser = RoundRect(
             self._sx,
             self._sy,
-            width=self.ortho_dist_to_pixel(0.10, self._size),
+            width=self.ortho_dist_to_pixel(0.14, self._size),
             height=self.ortho_dist_to_pixel(0.20, self._size),
             r=0,
-            fill=Palette.GRAY,
-            outline=Palette.BLACK,
+            fill=Colors.GRAY,
+            outline=Colors.BLACK,
         )
         self._scale_group.append(self.riser)
 
@@ -126,8 +130,8 @@ class Scale:
             width=self.ortho_dist_to_pixel(1.0, self._size),
             height=self.ortho_dist_to_pixel(0.08, self._size),
             r=int(10 * self._size),
-            fill=Palette.GRAY,
-            outline=Palette.BLACK,
+            fill=Colors.GRAY,
+            outline=Colors.BLACK,
         )
         self._scale_group.append(self.plate)
 
@@ -137,35 +141,34 @@ class Scale:
             self._sx,
             self._sy,
             self._outside_radius,
-            fill=Palette.BLUE_DK,
-            outline=Palette.WHITE,
+            fill=Colors.BLUE_DK,
+            outline=Colors.WHITE,
             stroke=1,
         )
         self._scale_group.append(self._dial)
 
-        # Define hash marks
-        self._point_radius = -5
+        # Define hashmarks
         for i in range(0, self._max_scale, self._max_scale // 10):
-            self._hash_value = Label(self.FONT_0, text=str(i), color=Palette.CYAN)
+            self._hash_value = Label(self.FONT_0, text=str(i), color=Colors.CYAN)
             self._hash_value.anchor_point = (0.5, 0.5)
             self._hash_value.anchored_position = self.dial_to_pixel(
                 i / self._max_scale, center=self._center, radius=self._label_radius
             )
             self._scale_group.append(self._hash_value)
 
-            # Major hash marks
+            # Major hashmarks
             self._x0, self._y0 = self.dial_to_pixel(
                 i / self._max_scale, center=self._center, radius=self._major_radius
             )
             self._x1, self._y1 = self.dial_to_pixel(
                 i / self._max_scale, center=self._center, radius=self._outside_radius
             )
-            self._hash_mark_a = Line(
-                self._x0, self._y0, self._x1, self._y1, Palette.CYAN
+            self._hashmark_a = Line(
+                self._x0, self._y0, self._x1, self._y1, Colors.CYAN
             )
-            self._scale_group.append(self._hash_mark_a)
+            self._scale_group.append(self._hashmark_a)
 
-            # Minor hash marks
+            # Minor hashmarks
             self._x0, self._y0 = self.dial_to_pixel(
                 (i + self._max_scale / 20) / self._max_scale,
                 center=self._center,
@@ -176,10 +179,10 @@ class Scale:
                 center=self._center,
                 radius=self._outside_radius,
             )
-            self._hash_mark_b = Line(
-                self._x0, self._y0, self._x1, self._y1, Palette.CYAN
+            self._hashmark_b = Line(
+                self._x0, self._y0, self._x1, self._y1, Colors.CYAN
             )
-            self._scale_group.append(self._hash_mark_b)
+            self._scale_group.append(self._hashmark_b)
 
         # Define dial bezel graphic
         self._sx, self._sy = self.ortho_to_pixel(0, 0, self._size)
@@ -188,40 +191,53 @@ class Scale:
             self._sy,
             self._outside_radius + 1,
             fill=None,
-            outline=Palette.BLACK,
+            outline=Colors.BLACK,
             stroke=1,
         )
         self._scale_group.append(self._bezel)
 
-        """# Define alarm points
-        self._point_stroke = 2
-        self._point_diameter = int((Screen.HEIGHT * 0.03) + (2 * self._point_stroke))
-        self._point_radius = self._point_diameter // 2
+        # Define alarm points
+        self._alarm_1_palette = displayio.Palette(1)
+        self._alarm_1_palette[0] = Colors.ORANGE
+        if self._alarm_1 != None:
+            self._x0, self._y0 = self.dial_to_pixel(
+                self._alarm_1, center=self._center, radius=self._outside_radius)
+        else:
+            self._x0 = self._y0 = -50
 
-        self.hand_1_alarm = Circle(
-            -50,
-            -50,
-            self._point_radius,
-            fill=Palette.ORANGE,
-            outline=Palette.ORANGE,
-            stroke=self._point_stroke,
+        self.alarm_1_marker = vectorio.Circle(
+            pixel_shader=self._alarm_1_palette,
+            radius=self._point_radius,
+            x=self._x0,
+            y=self._y0,
         )
-        self._scale_group.append(self.hand_1_alarm)
+        self._scale_group.append(self.alarm_1_marker)
 
-        self.hand_2_alarm = Circle(
-            -50,
-            -50,
-            self._point_radius,
-            fill=Palette.GREEN,
-            outline=Palette.GREEN,
-            stroke=self._point_stroke,
+        self._alarm_2_palette = displayio.Palette(1)
+        self._alarm_2_palette[0] = Colors.GREEN
+        if self._alarm_2 != None:
+            self._x0, self._y0 = self.dial_to_pixel(
+                self._alarm_2, center=self._center, radius=self._outside_radius)
+        else:
+            self._x0 = self._y0 = -50
+
+        self.alarm_2_marker = vectorio.Circle(
+            pixel_shader=self._alarm_2_palette,
+            radius=self._point_radius,
+            x=self._x0,
+            y=self._y0,
         )
-        self._scale_group.append(self.hand_2_alarm)"""
+        self._scale_group.append(self.alarm_2_marker)
 
         # Define dial center piviot
+        self._pivot_palette = displayio.Palette(1)
+        self._pivot_palette[0] = Colors.CYAN
         self._x0, self._y0 = self.ortho_to_pixel(0, 0, self._size)
-        self._pivot = Circle(
-            self._x0, self._y0, self._outside_radius // 14, fill=Palette.WHITE
+        self._pivot = vectorio.Circle(
+            pixel_shader=self._pivot_palette,
+            radius=self._outside_radius // 14,
+            x=self._x0,
+            y=self._y0,
         )
         self._pivot_group.append(self._pivot)
 
@@ -247,6 +263,34 @@ class Scale:
     @value.setter
     def value(self, hands=(0, 0)):
         self._show_hands(hands[0], hands[1])
+
+    @property
+    def alarm_1(self):
+        """Current alarm_1 value."""
+        return self._alarm_1
+
+    @alarm_1.setter
+    def alarm_1(self, alarm=None):
+        self._alarm_1 = alarm
+        if self._alarm_1 != None:
+            self.alarm_1_marker.x, self.alarm_1_marker.y = self.dial_to_pixel(
+                self._alarm_1, center=self._center, radius=self._outside_radius)
+        else:
+            self.alarm_1_marker.x = self.alarm_1_marker.y = -50
+
+    @property
+    def alarm_2(self):
+        """Current alarm_2 value."""
+        return self._alarm_2
+
+    @alarm_2.setter
+    def alarm_2(self, alarm=None):
+        self._alarm_2 = alarm
+        if self._alarm_2 != None:
+            self.alarm_2_marker.x, self.alarm_2_marker.y = self.dial_to_pixel(
+                self._alarm_2, center=self._center, radius=self._outside_radius)
+        else:
+            self.alarm_2_marker.x = self.alarm_2_marker.y = -50
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display
@@ -290,14 +334,14 @@ class Scale:
         self._hand_2 = hand_2
 
         if self._hand_1 != min(1.0, max(self._hand_1, 0.0)):
-            self._hand_1_outline = Palette.RED
+            self._hand_1_outline = Colors.RED
         else:
-            self._hand_1_outline = Palette.ORANGE
+            self._hand_1_outline = Colors.ORANGE
 
         if self._hand_2 != min(1.0, max(self._hand_2, 0.0)):
-            self._hand_2_outline = Palette.RED
+            self._hand_2_outline = Colors.RED
         else:
-            self._hand_2_outline = Palette.GREEN
+            self._hand_2_outline = Colors.GREEN
 
         # Move plate/riser
         self._plate_disp = self._plate_y - (
@@ -326,7 +370,7 @@ class Scale:
             self._y1,
             self._x2,
             self._y2,
-            fill=Palette.GREEN,
+            fill=Colors.GREEN,
             outline=self._hand_2_outline,
         )
         self._hands_group.append(self.hand_2)
@@ -349,7 +393,7 @@ class Scale:
             self._y1,
             self._x2,
             self._y2,
-            fill=Palette.ORANGE,
+            fill=Colors.ORANGE,
             outline=self._hand_1_outline,
         )
         self._hands_group.append(self.hand_1)

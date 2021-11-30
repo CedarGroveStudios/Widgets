@@ -42,7 +42,7 @@ display.rotation = 0
 gc.collect()
 
 magic_eye_1 = MagicEye((0.85, 0.75), size=0.3, bezel_color=0x000000)
-#magic_eye_1 = MagicEye(size=0.75)
+#magic_eye_1 = MagicEye()
 test_display_group.append(magic_eye_1.display_group)
 
 # magic_eye_2 = MagicEye((0.25, 0.25), size=0.20)
@@ -94,22 +94,31 @@ while True:
         if not lone_eye:
             scale.value = (m, 0)
             bubble_display_1.value = i
+        """else:
+            time.sleep(0.050)"""
     for i in range(200, 0, -5):
         m = i / 100
         magic_eye_1.value = m
         if not lone_eye:
             scale.value = (0, m)
             bubble_display_2.value = i
+        """else:
+            time.sleep(0.050)"""
 
     free_memory = gc.mem_free()
+    frame = time.monotonic() - t0
     print(
-        f'frame: {(time.monotonic() - t0):5.2f} sec   free memory: {free_memory} bytes'
+        f'frame: {frame:5.2f} sec   free memory: {free_memory} bytes'
     )
     print(
-        ((time.monotonic() - t0), (free_memory/1000))
+        (frame, (free_memory/1000))
     )
 
     if not lone_eye:
+        bubble_display_1.value = round(frame, 1)
+        bubble_display_2.value = round(free_memory/1000, 1)
+        time.sleep(3)
+
         neopixel_1.fill(color=0xFF0000)
         neopixel_2.fill(color=0x00FF00)
         neopixel_3.fill(color=0x0000FF)
@@ -157,6 +166,9 @@ while True:
             right_level = min(left_level + (random.randrange(-25, 25) / 100), 1.0)
             bargraph_1.value = bubble_display_1.value = left_level
             bargraph_2.value = bubble_display_2.value = right_level
+
+        """else:
+            time.sleep(0.050)"""
 
     gc.collect()
 
