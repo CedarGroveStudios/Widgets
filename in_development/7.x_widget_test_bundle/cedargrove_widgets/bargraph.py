@@ -1,6 +1,6 @@
 # 10-Segment Bargraph widget
 # based on the Lucky Light LED 10-Segment LED Gauge Bar and LML391x controllers
-# 2021-11-28 v0.7
+# 2021-11-30 v0.7
 
 import displayio
 import vectorio
@@ -22,8 +22,8 @@ class Bargraph:
         units=0,
         center=(0, 0),
         size=1,
-        range='VU',
-        mode='BAR',
+        range="VU",
+        mode="BAR",
         display_size=(None, None),
     ):
         """Bargraph display widget. Accepts a normalized (0 to 1.0) input
@@ -123,7 +123,6 @@ class Bargraph:
     def value(self, signal=None):
         self._show_signal(signal)
 
-
     # @property
     # def center(self, cluster=0):
     #    """Normalized display coordinates of the object center."""
@@ -165,21 +164,21 @@ class Bargraph:
         """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel
         position on the circumference of the dial's circle with center
         (x,y pixels) and radius (pixels)."""
-        self._rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
-        self._rads = self._rads + (pi / 2)  # rotate axis counterclockwise
-        x = center[0] + int(cos(self._rads) * radius)
-        y = center[1] - int(sin(self._rads) * radius)
+        rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
+        rads = rads + (pi / 2)  # rotate axis counterclockwise
+        x = center[0] + int(cos(rads) * radius)
+        y = center[1] - int(sin(rads) * radius)
         return x, y
 
-    def ortho_to_pixel(self, x, y, size=1.0):
+    def cart_to_pixel(self, x, y, size=1.0):
         """Convert normalized cartesian position value (-0.5, to + 0.5) to display
         pixels."""
-        self._min_axis = min(self.WIDTH, self.HEIGHT)
-        x1 = int(round(self._min_axis * size * x, 0)) + self._center[0]
-        y1 = self._center[1] - int(round(self._min_axis * size * y, 0))
+        min_axis = min(self.WIDTH, self.HEIGHT)
+        x1 = int(round(min_axis * size * x, 0)) + self._center[0]
+        y1 = self._center[1] - int(round(min_axis * size * y, 0))
         return x1, y1
 
-    def ortho_dist_to_pixel(self, distance=0, size=1.0):
+    def cart_dist_to_pixel(self, distance=0, size=1.0):
         """Convert normalized cartesian distance value to display pixels."""
-        self._min_axis = min(self.WIDTH, self.HEIGHT)
-        return int(round(self._min_axis * size * distance, 0))
+        min_axis = min(self.WIDTH, self.HEIGHT)
+        return int(round(min_axis * size * distance, 0))
