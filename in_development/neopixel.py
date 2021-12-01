@@ -1,12 +1,12 @@
 # NeoPixel widget
-# 2021-11-20 v0.6
+# 2021-11-30 v0.7
 
 import displayio
+import vectorio
 from adafruit_display_shapes.circle import Circle
-from adafruit_display_shapes.rect import Rect
 
 
-class Palette:
+class Colors:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     GRAY = 0x508080
@@ -23,32 +23,37 @@ class NeoPixel:
         self._neopixel_units = units
         self._origin = center
 
+        gray_palette = displayio.Palette(1)
+        gray_palette[0] = Colors.GRAY
+        gray_dk_palette = displayio.Palette(1)
+        gray_dk_palette[0] = Colors.GRAY_DK
+
         for chip in range(0, self._neopixel_units):
-            self._upper_left_corner = (self._origin[0] + (15 * chip), self._origin[1])
+            upper_left_corner = (self._origin[0] + (15 * chip), self._origin[1])
 
-            self._pkg = Rect(
-                self._upper_left_corner[0],
-                self._upper_left_corner[1],
-                15,
-                15,
-                fill=Palette.GRAY_DK,
+            pkg = vectorio.Rectangle(
+                pixel_shader=gray_dk_palette,
+                x=upper_left_corner[0],
+                y=upper_left_corner[1],
+                width=15,
+                height=15,
             )
-            self._neo_pkg.append(self._pkg)
+            self._neo_pkg.append(pkg)
 
-            self._pkg_index = Rect(
-                self._upper_left_corner[0],
-                14 + self._upper_left_corner[1],
-                1,
-                1,
-                fill=Palette.GRAY,
+            pkg_index = vectorio.Rectangle(
+                pixel_shader=gray_palette,
+                x=upper_left_corner[0],
+                y=14 + upper_left_corner[1],
+                width=1,
+                height=1,
             )
-            self._neo_pkg.append(self._pkg_index)
+            self._neo_pkg.append(pkg_index)
 
             self._reflect_base = Circle(
-                self._upper_left_corner[0] + 7,
-                self._upper_left_corner[1] + 7,
+                upper_left_corner[0] + 7,
+                upper_left_corner[1] + 7,
                 6,
-                fill=Palette.BLACK,
+                fill=Colors.BLACK,
                 outline=None,
             )
             self._reflector.append(self._reflect_base)
@@ -86,13 +91,13 @@ class NeoPixel:
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    def show(self, n=None, color=Palette.BLACK):
+    def show(self, n=None, color=Colors.BLACK):
         """Set the color of the nth neopixel."""
         if n != None:
             self._reflector[n].fill = color
         return
 
-    def fill(self, color=Palette.BLACK):
+    def fill(self, color=Colors.BLACK):
         """Fill all neopixels with color."""
         for i in range(0, self._neopixel_units):
             self.show(i, color)
@@ -109,21 +114,21 @@ class NeoPixel:
         """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel
         position on the circumference of the dial's circle with center
         (x,y pixels) and radius (pixels)."""
-        self._rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
-        self._rads = self._rads + (pi / 2)  # rotate axis counterclockwise
-        x = int(center[0] + (cos(self._rads) * radius))
-        y = int(center[1] - (sin(self._rads) * radius))
+        rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
+        rads = rads + (pi / 2)  # rotate axis counterclockwise
+        x = center[0] + int(cos(rads) * radius)
+        y = center[1] - int(sin(rads) * radius)
         return x, y
 
-    def ortho_to_pixel(self, x, y, size=1.0):
+    def cart_to_pixel(self, x, y, size=1.0):
         """Convert normalized cartesian position value (-0.5, to + 0.5) to display
         pixels."""
-        self._min_axis = min(self.WIDTH, self.HEIGHT)
-        x1 = int(round(self._min_axis * size * x, 0)) + self._center[0]
-        y1 = self._center[1] - int(round(self._min_axis * size * y, 0))
+        min_axis = min(self.WIDTH, self.HEIGHT)
+        x1 = int(round(min_axis * size * x, 0)) + self._center[0]
+        y1 = self._center[1] - int(round(min_axis * size * y, 0))
         return x1, y1
 
-    def ortho_dist_to_pixel(self, distance=0, size=1.0):
+    def cart_dist_to_pixel(self, distance=0, size=1.0):
         """Convert normalized cartesian distance value to display pixels."""
-        self._min_axis = min(self.WIDTH, self.HEIGHT)
-        return int(round(self._min_axis * size * distance, 0))
+        min_axis = min(self.WIDTH, self.HEIGHT)
+        return int(round(min_axis * size * distance, 0))

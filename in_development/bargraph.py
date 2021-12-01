@@ -1,6 +1,6 @@
 # 10-Segment Bargraph widget
 # based on the Lucky Light LED 10-Segment LED Gauge Bar and LML391x controllers
-# 2021-11-28 v0.7
+# 2021-11-30 v0.7
 
 import displayio
 import vectorio
@@ -22,8 +22,8 @@ class Bargraph:
         units=0,
         center=(0, 0),
         size=1,
-        range='VU',
-        mode='BAR',
+        range="VU",
+        mode="BAR",
         display_size=(None, None),
     ):
         """Bargraph display widget. Accepts a normalized (0 to 1.0) input
@@ -68,39 +68,43 @@ class Bargraph:
         self._grn_palette = displayio.Palette(1)
         self._grn_palette[0] = Colors.GREEN_LED
 
-        for chip in range(0, self._units):
-            self._upper_left_corner = (self._origin[0] + (100 * chip), self._origin[1])
+        # Draw the DIP packages
+        dip_pkg_palette = displayio.Palette(1)
+        dip_pkg_palette[0] = Colors.GRAY_DK
 
-            self._dip_pkg = vectorio.Rectangle(
-                pixel_shader=self._dip_pkg_palette,
-                x=self._upper_left_corner[0],
-                y=self._upper_left_corner[1],
+        for chip in range(0, self._units):
+            upper_left_corner = (self._origin[0] + (100 * chip), self._origin[1])
+
+            dip_pkg = vectorio.Rectangle(
+                pixel_shader=dip_pkg_palette,
+                x=upper_left_corner[0],
+                y=upper_left_corner[1],
                 width=100,
                 height=40,
             )
-            self._chips.append(self._dip_pkg)
+            self._chips.append(dip_pkg)
 
-            self._points = [
-                (self._upper_left_corner[0], 40 + self._upper_left_corner[1]),
-                (self._upper_left_corner[0], 35 + self._upper_left_corner[1]),
-                (4 + self._upper_left_corner[0], 40 + self._upper_left_corner[1]),
+            _points = [
+                (upper_left_corner[0], 40 + upper_left_corner[1]),
+                (upper_left_corner[0], 35 + upper_left_corner[1]),
+                (4 + upper_left_corner[0], 40 + upper_left_corner[1]),
             ]
             self._dip_idx = vectorio.Polygon(
                 pixel_shader=self._blk_palette,
-                points=self._points,
+                points=_points,
             )
             self._chips.append(self._dip_idx)
 
             for i in range(0, 10):
-                self._bar = vectorio.Rectangle(
+                bar_rect = vectorio.Rectangle(
                     pixel_shader=self._blk_palette,
-                    x=self._upper_left_corner[0] + 2 + (i * 10),
-                    y=10 + self._upper_left_corner[1],
+                    x=upper_left_corner[0] + 2 + (i * 10),
+                    y=10 + upper_left_corner[1],
                     width=6,
                     height=20,
                 )
 
-                self._bars.append(self._bar)
+                self._bars.append(bar_rect)
         self._bargraph_group.append(self._chips)
         self._bargraph_group.append(self._bars)
 
@@ -123,7 +127,6 @@ class Bargraph:
     def value(self, signal=None):
         self._show_signal(signal)
 
-
     # @property
     # def center(self, cluster=0):
     #    """Normalized display coordinates of the object center."""
@@ -140,11 +143,10 @@ class Bargraph:
     #    return
 
     def _show_signal(self, signal=None):
-        self._signal = signal
-        self._bar = int(round(self._signal * (self._units * 10), 0))
+        bar = int(round(signal * (self._units * 10), 0))
 
         for i in range(0, self._units * 10):
-            if i <= self._bar and self._range == "VU":
+            if i <= bar and self._range == "VU":
                 if i > ((self._units - 1) * 10) + 6:
                     self._bars[i].pixel_shader = self._red_palette
                 elif i == ((self._units - 1) * 10) + 6:
@@ -165,21 +167,21 @@ class Bargraph:
         """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel
         position on the circumference of the dial's circle with center
         (x,y pixels) and radius (pixels)."""
-        self._rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
-        self._rads = self._rads + (pi / 2)  # rotate axis counterclockwise
-        x = center[0] + int(cos(self._rads) * radius)
-        y = center[1] - int(sin(self._rads) * radius)
+        rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
+        rads = rads + (pi / 2)  # rotate axis counterclockwise
+        x = center[0] + int(cos(rads) * radius)
+        y = center[1] - int(sin(rads) * radius)
         return x, y
 
-    def ortho_to_pixel(self, x, y, size=1.0):
+    def cart_to_pixel(self, x, y, size=1.0):
         """Convert normalized cartesian position value (-0.5, to + 0.5) to display
         pixels."""
-        self._min_axis = min(self.WIDTH, self.HEIGHT)
-        x1 = int(round(self._min_axis * size * x, 0)) + self._center[0]
-        y1 = self._center[1] - int(round(self._min_axis * size * y, 0))
+        min_axis = min(self.WIDTH, self.HEIGHT)
+        x1 = int(round(min_axis * size * x, 0)) + self._center[0]
+        y1 = self._center[1] - int(round(min_axis * size * y, 0))
         return x1, y1
 
-    def ortho_dist_to_pixel(self, distance=0, size=1.0):
+    def cart_dist_to_pixel(self, distance=0, size=1.0):
         """Convert normalized cartesian distance value to display pixels."""
-        self._min_axis = min(self.WIDTH, self.HEIGHT)
-        return int(round(self._min_axis * size * distance, 0))
+        min_axis = min(self.WIDTH, self.HEIGHT)
+        return int(round(min_axis * size * distance, 0))

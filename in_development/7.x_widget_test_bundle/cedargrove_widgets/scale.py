@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-11-30 v2.0
+# 2021-11-30 v2.1
 
 import displayio
 import vectorio
@@ -202,6 +202,7 @@ class Scale:
             x0, y0 = self.dial_to_pixel(
                 self._alarm_1, center=self._center, radius=self._outside_radius
             )
+            self._alarm_1_palette.make_opaque(0)
         else:
             x0 = y0 = 0
             self._alarm_1_palette.make_transparent(0)
@@ -220,6 +221,7 @@ class Scale:
             x0, y0 = self.dial_to_pixel(
                 self._alarm_2, center=self._center, radius=self._outside_radius
             )
+            self._alarm_2_palette.make_opaque(0)
         else:
             x0 = y0 = 0
             self._alarm_2_palette.make_transparent(0)
@@ -275,10 +277,12 @@ class Scale:
     @alarm_1.setter
     def alarm_1(self, alarm=None):
         self._alarm_1 = alarm
+        self._alarm_1_palette[0] = Colors.ORANGE
         if self._alarm_1 != None:
             self.alarm_1_marker.x, self.alarm_1_marker.y = self.dial_to_pixel(
                 self._alarm_1, center=self._center, radius=self._outside_radius
             )
+            self._alarm_1_palette.make_opaque(0)
         else:
             self.alarm_1_marker.x = self.alarm_1_marker.y = 0
             self._alarm_1_palette.make_transparent(0)
@@ -291,10 +295,12 @@ class Scale:
     @alarm_2.setter
     def alarm_2(self, alarm=None):
         self._alarm_2 = alarm
+        self._alarm_2_palette[0] = Colors.GREEN
         if self._alarm_2 != None:
             self.alarm_2_marker.x, self.alarm_2_marker.y = self.dial_to_pixel(
                 self._alarm_2, center=self._center, radius=self._outside_radius
             )
+            self._alarm_2_palette.make_opaque(0)
         else:
             self.alarm_2_marker.x = self.alarm_2_marker.y = 0
             self._alarm_2_palette.make_transparent(0)
