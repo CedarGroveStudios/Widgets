@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # bar_bubble_neo_code.py
-# 2021-11-27 v1.1
+# 2021-12-09 v1.2
 
 # For host board with integral display
 
@@ -50,7 +50,7 @@ test_display_group.append(magic_eye_1.display_group)
 
 if not lone_eye:
     scale = Scale(max_scale=100, center=(0.85, 0.30), size=0.3)
-    test_display_group.append(scale.display_group)
+    test_display_group.append(scale)
 
     bargraph_1 = Bargraph(units=2, center=(10, 10), mode="VU")
     test_display_group.append(bargraph_1.display_group)
