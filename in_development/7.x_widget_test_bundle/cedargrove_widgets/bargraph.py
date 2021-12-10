@@ -1,6 +1,6 @@
 # 10-Segment Bargraph widget
 # based on the Lucky Light LED 10-Segment LED Gauge Bar and LML391x controllers
-# 2021-12-09  v0.8
+# 2021-12-10 v0.9
 
 import displayio
 import vectorio
@@ -55,9 +55,6 @@ class Bargraph(displayio.Group):
         bargraph_group = displayio.Group(scale=self._size)
         chips = displayio.Group()
         self._bars = displayio.Group()
-
-        self._dip_pkg_palette = displayio.Palette(1)
-        self._dip_pkg_palette[0] = Colors.GRAY_DK
 
         self._blk_palette = displayio.Palette(1)
         self._blk_palette[0] = Colors.BLACK

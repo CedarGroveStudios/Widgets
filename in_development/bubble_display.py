@@ -1,6 +1,6 @@
 # LED bubble display widget
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-11-30 v0.66
+# 2021-12-10 v0.8
 
 import displayio
 import vectorio
@@ -44,7 +44,7 @@ class Colors:
     WHITE = 0xFFFFFF
 
 
-class BubbleDisplay:
+class BubbleDisplay(displayio.Group):
     def __init__(self, units=0, mode='Normal', center=(0, 0), size=1, display_size=(None, None)):
         self._mode = mode
         self._size = size
@@ -55,23 +55,31 @@ class BubbleDisplay:
         self._units = units
         self._origin = center
 
+        red_bkg_palette = displayio.Palette(1)
+        red_bkg_palette[0] = Colors.RED_BKG
+        dip_pkg_palette = displayio.Palette(1)
+        dip_pkg_palette[0] = Colors.RED_PKG
+        blk_palette = displayio.Palette(1)
+        blk_palette[0] = Colors.BLACK
+
         for chip in range(0, self._units):
             upper_left_corner = (self._origin[0] + (60 * chip), self._origin[1])
-            dip_package = Rect(
-                upper_left_corner[0],
-                upper_left_corner[1],
-                60,
-                25,
-                fill=Colors.RED_PKG,
-            )
-            self._cluster.append(dip_package)
 
-            dip_index = Rect(
-                2 + upper_left_corner[0],
-                24 + upper_left_corner[1],
-                2,
-                2,
-                fill=Colors.BLACK,
+            dip_pkg = vectorio.Rectangle(
+                pixel_shader=dip_pkg_palette,
+                x=upper_left_corner[0],
+                y=upper_left_corner[1],
+                width=60,
+                height=25,
+            )
+            self._cluster.append(dip_pkg)
+
+            dip_index = vectorio.Rectangle(
+                pixel_shader = blk_palette,
+                x=2 + upper_left_corner[0],
+                y=24 + upper_left_corner[1],
+                width=2,
+                height=2,
             )
             self._cluster.append(dip_index)
 
@@ -158,20 +166,35 @@ class BubbleDisplay:
                     fill=Colors.RED_BKG,
                 )
                 self._digits.append(seg_dp)
-
-        self._cluster_group.append(self._cluster)
-        self._cluster_group.append(self._digits)
+        super().__init__()
+        self.append(self._cluster)
+        self.append(self._digits)
         return
 
     @property
-    def display_group(self):
-        """Displayio cluster group."""
-        return self._cluster_group
+    def center(self):
+        """Bubble display object center."""
+        return self._origin
 
     @property
     def units(self):
         """Number of units."""
         return self._units
+
+    @property
+    def size(self):
+        """Bubble display object size."""
+        return self._size
+
+    @property
+    def mode(self):
+        """Bubble display display mode."""
+        return self._mode
+
+    @property
+    def display_size(self):
+        """Display size in pixels."""
+        return self._display_size
 
     @property
     def value(self):

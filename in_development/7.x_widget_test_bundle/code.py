@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # bar_bubble_neo_code.py
-# 2021-12-09 v1.2
+# 2021-12-10 v1.4
 
 # For host board with integral display
 
@@ -46,36 +46,36 @@ magic_eye_1 = MagicEye((0.85, 0.75), size=0.3, bezel_color=0x000000)
 test_display_group.append(magic_eye_1)
 
 # magic_eye_2 = MagicEye((0.25, 0.25), size=0.20)
-# test_display_group.append(magic_eye_2)
+# test_display_group.display_group.append(magic_eye_2.display_group)
 
 if not lone_eye:
     scale = Scale(max_scale=100, center=(0.85, 0.30), size=0.3)
     test_display_group.append(scale)
 
     bargraph_1 = Bargraph(units=2, center=(10, 10), mode="VU")
-    test_display_group.append(bargraph_1.display_group)
+    test_display_group.append(bargraph_1)
 
     bargraph_2 = Bargraph(units=2, center=(10, 75), mode="VU")
-    test_display_group.append(bargraph_2.display_group)
+    test_display_group.append(bargraph_2)
 
     bubble_display_1 = BubbleDisplay(units=1, center=(5, 40))
-    test_display_group.append(bubble_display_1.display_group)
+    test_display_group.append(bubble_display_1)
 
     bubble_display_2 = BubbleDisplay(units=1, center=(5, 105))
-    test_display_group.append(bubble_display_2.display_group)
+    test_display_group.append(bubble_display_2)
 
     neo_units = 10
     neopixel_1 = NeoPixel(units=neo_units, center=(10, 160))
-    test_display_group.append(neopixel_1.display_group)
+    test_display_group.append(neopixel_1)
 
     neopixel_2 = NeoPixel(units=neo_units, center=(10, 175))
-    test_display_group.append(neopixel_2.display_group)
+    test_display_group.append(neopixel_2)
 
     neopixel_3 = NeoPixel(units=neo_units, center=(10, 190))
-    test_display_group.append(neopixel_3.display_group)
+    test_display_group.append(neopixel_3)
 
     neopixel_4 = NeoPixel(units=neo_units, center=(10, 205))
-    test_display_group.append(neopixel_4.display_group)
+    test_display_group.append(neopixel_4)
 
     neo = neopixel_1.neo_group
 
