@@ -1,5 +1,5 @@
 # NeoPixel widget
-# 2021-11-30 v0.7
+# 2021-12-09 v0.8
 
 import displayio
 import vectorio
@@ -13,11 +13,11 @@ class Colors:
     GRAY_DK = 0x101010
 
 
-class NeoPixel:
+class NeoPixel(displayio.Group):
     def __init__(self, units=0, center=(0, 0), size=1, display_size=(None, None)):
         self._size = size
         self._neopixel_group = displayio.Group(scale=self._size)
-        self._neo_pkg = displayio.Group()
+        neo_pkg = displayio.Group()
         self._reflector = displayio.Group()
 
         self._neopixel_units = units
@@ -38,7 +38,7 @@ class NeoPixel:
                 width=15,
                 height=15,
             )
-            self._neo_pkg.append(pkg)
+            neo_pkg.append(pkg)
 
             pkg_index = vectorio.Rectangle(
                 pixel_shader=gray_palette,
@@ -47,7 +47,7 @@ class NeoPixel:
                 width=1,
                 height=1,
             )
-            self._neo_pkg.append(pkg_index)
+            neo_pkg.append(pkg_index)
 
             self._reflect_base = Circle(
                 upper_left_corner[0] + 7,
@@ -58,23 +58,35 @@ class NeoPixel:
             )
             self._reflector.append(self._reflect_base)
 
-        self._neopixel_group.append(self._neo_pkg)
-        self._neopixel_group.append(self._reflector)
+        super().__init__()
+        self.append(neo_pkg)
+        self.append(self._reflector)
         return
 
     @property
-    def display_group(self):
-        """Displayio neopixel group."""
-        return self._neopixel_group
+    def center(self):
+        """Bargraph object center."""
+        return self._origin
+
+    @property
+    def units(self):
+        """Number of units."""
+        return self._neopixel_units
+
+    @property
+    def size(self):
+        """Bargraph object size."""
+        return self._size
+
+    @property
+    def display_size(self):
+        """Display size in pixels."""
+        return self._display_size
 
     @property
     def neo_group(self):
         return self._reflector
 
-    @property
-    def units(self):
-        """Number of NeoPixel units."""
-        return self._neopixel_units
 
     # @property
     # def center(self, n=0):
