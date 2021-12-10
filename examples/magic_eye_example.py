@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye_example.py
-# 2021-11-20 v1.0
+# 2021-12-09 v1.1
 
 # For host board with integral display
 
@@ -23,9 +23,9 @@ display.rotation = 0
 
 magic_eye_1 = MagicEye(size=0.55)
 magic_eye_2 = MagicEye((0.25, 0.25), size=0.20)
-magic_eye_1.display_group.append(magic_eye_2.display_group)
+magic_eye_1.append(magic_eye_2)
 
-display.show(magic_eye_1.display_group)
+display.show(magic_eye_1)
 tone(board.A0, 880, 0.1)
 
 while True:

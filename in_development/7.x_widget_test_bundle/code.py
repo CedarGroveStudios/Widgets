@@ -43,10 +43,10 @@ gc.collect()
 
 magic_eye_1 = MagicEye((0.85, 0.75), size=0.3, bezel_color=0x000000)
 #magic_eye_1 = MagicEye()
-test_display_group.append(magic_eye_1.display_group)
+test_display_group.append(magic_eye_1)
 
 # magic_eye_2 = MagicEye((0.25, 0.25), size=0.20)
-# test_display_group.display_group.append(magic_eye_2.display_group)
+# test_display_group.append(magic_eye_2)
 
 if not lone_eye:
     scale = Scale(max_scale=100, center=(0.85, 0.30), size=0.3)
