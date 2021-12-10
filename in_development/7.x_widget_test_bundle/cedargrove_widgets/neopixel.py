@@ -1,5 +1,5 @@
 # NeoPixel widget
-# 2021-12-09 v0.8
+# 2021-12-09  v0.8
 
 import displayio
 import vectorio

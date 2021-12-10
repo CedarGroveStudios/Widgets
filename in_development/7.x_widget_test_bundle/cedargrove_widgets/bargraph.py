@@ -1,6 +1,6 @@
 # 10-Segment Bargraph widget
 # based on the Lucky Light LED 10-Segment LED Gauge Bar and LML391x controllers
-# 2021-12-09 v0.8
+# 2021-12-09  v0.8
 
 import displayio
 import vectorio

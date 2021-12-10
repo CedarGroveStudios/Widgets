@@ -1,6 +1,6 @@
 # 10-Segment Bargraph widget
 # based on the Lucky Light LED 10-Segment LED Gauge Bar and LML391x controllers
-# 2021-11-30 v0.7
+# 2021-12-09 v0.8
 
 import displayio
 import vectorio
@@ -16,7 +16,7 @@ class Colors:
     YELLOW = 0xFFFF00
 
 
-class Bargraph:
+class Bargraph(displayio.Group):
     def __init__(
         self,
         units=0,
@@ -50,9 +50,10 @@ class Bargraph:
         self._size = size
         self._range = range
         self._mode = mode
+        self._display_size = display_size
 
-        self._bargraph_group = displayio.Group(scale=self._size)
-        self._chips = displayio.Group()
+        bargraph_group = displayio.Group(scale=self._size)
+        chips = displayio.Group()
         self._bars = displayio.Group()
 
         self._dip_pkg_palette = displayio.Palette(1)
@@ -82,18 +83,18 @@ class Bargraph:
                 width=100,
                 height=40,
             )
-            self._chips.append(dip_pkg)
+            chips.append(dip_pkg)
 
             _points = [
                 (upper_left_corner[0], 40 + upper_left_corner[1]),
                 (upper_left_corner[0], 35 + upper_left_corner[1]),
                 (4 + upper_left_corner[0], 40 + upper_left_corner[1]),
             ]
-            self._dip_idx = vectorio.Polygon(
+            dip_idx = vectorio.Polygon(
                 pixel_shader=self._blk_palette,
                 points=_points,
             )
-            self._chips.append(self._dip_idx)
+            chips.append(dip_idx)
 
             for i in range(0, 10):
                 bar_rect = vectorio.Rectangle(
@@ -105,18 +106,39 @@ class Bargraph:
                 )
 
                 self._bars.append(bar_rect)
-        self._bargraph_group.append(self._chips)
-        self._bargraph_group.append(self._bars)
+        super().__init__()
+        self.append(chips)
+        self.append(self._bars)
 
     @property
-    def display_group(self):
-        """Displayio bargraph group."""
-        return self._bargraph_group
+    def center(self):
+        """Bargraph object center."""
+        return self._origin
 
     @property
     def units(self):
         """Number of units."""
         return self._units
+
+    @property
+    def size(self):
+        """Bargraph object size."""
+        return self._size
+
+    @property
+    def range(self):
+        """Bargraph signal range."""
+        return self._range
+
+    @property
+    def mode(self):
+        """Bargraph display mode."""
+        return self._mode
+
+    @property
+    def display_size(self):
+        """Display size in pixels."""
+        return self._display_size
 
     @property
     def value(self):
