@@ -35,9 +35,9 @@ class MagicEye(displayio.Group):
         integral display width and height. The default RGB bezel color is
         0x000000 (black).
 
-        :param center: The widget center x,y tuple in normalized display
+        :param center: The target anode center x,y tuple in normalized display
         units. Defaults to (0.5, 0.5).
-        :param size: The normalized diameter value of the widget relative
+        :param size: The normalized diameter value of the target anode relative
         to the display's shorter axis. Defaults to 0.5.
         :param display_size: The host display's integer width and height tuple
         expressed in pixels. If (None, None) and the host includes an integral

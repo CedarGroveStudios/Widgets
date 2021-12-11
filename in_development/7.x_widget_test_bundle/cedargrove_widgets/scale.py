@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-12-09 v2.2
+# 2021-12-11 v2.3
 
 import displayio
 import vectorio
@@ -41,14 +41,18 @@ class Scale(displayio.Group):
         """Instantiate the scale graphic object for DisplayIO devices.
         The Scale class is a displayio group representing the scale widget.
 
-        :param max_scale: The maximum scale integer value. Used to label the
-        ten major dial hashmarks.
-        :param center: The dial center x,y tuple in normalized display units.
-        :param size: The widget size factor relative to the display's
+        :param integer max_scale: The maximum scale integer value. Used to
+        label the ten major dial hashmarks.
+        :param float alarm_1
+        :param float alarm_2
+        :param float center: The dial center x,y tuple in normalized display
+        units.
+        :param float size: The widget size factor relative to the display's
         shorter axis.
-        :param display_size: The host display's integer width and height tuple
-        expressed in pixels. If (None, None) and the host includes an integral
-        display, the tuple value is set to (board.DISPLAY.width, board.DISPLAY.height)."""
+        :param integer display_size: The host display's integer width and
+        height tuple expressed in pixels. If (None, None) and the host includes
+        an integral display, the tuple value is set to (board.DISPLAY.width,
+        board.DISPLAY.height)."""
 
         # Determine default display size in pixels
         if None in display_size:
@@ -339,31 +343,52 @@ class Scale(displayio.Group):
         return int(round(min_axis * size * distance, 0))
 
     def _show_hands(self, hand_1=0, hand_2=0):
-        """Display indicator plot_handes and move scale plate
-        proportionally. Input is normalized for 0.0 to 1.0 (minimum and maximum
-        range), but accepts any floating point value.
+        """Display indicator hands and move scale plate proportionally. Input
+        is normalized for 0.0 (minimum) to 1.0 (maximum), but accepts any
+        floating point value. A value of None will blank the hand display and
+        associated alarm.
 
-        :param hand_1: The normalized first hand position on the dial circumference.
-        :param hand_1: The normalized second hand position on the dial circumference."""
+        :param float hand_1: The normalized first hand position on the dial.
+        :param float hand_1: The normalized second hand position on the dial."""
 
         self._hand_1 = hand_1
         self._hand_2 = hand_2
 
-        if self._hand_1 != min(1.0, max(self._hand_1, 0.0)):
-            self._hand_1_outline = Colors.RED
-        else:
-            self._hand_1_outline = Colors.ORANGE
+        self._hand_1_enable = self._hand_2_enable = True
+        self._alarm_1_palette.make_opaque(0)
+        self._alarm_2_palette.make_opaque(0)
 
-        if self._hand_2 != min(1.0, max(self._hand_2, 0.0)):
-            self._hand_2_outline = Colors.RED
+        hand_1_fill = hand_1_outline = Colors.ORANGE
+        self.alarm_1 = self._alarm_1
+        if self._hand_1 == None:
+            self._hand_1 = 0
+            self._hand_1_enable = False
+            hand_1_fill = hand_1_outline = None
+            self._alarm_1_palette.make_transparent(0)
+            self.alarm_1_marker.x = self.alarm_1_marker.y = 0
+        elif self._hand_1 != min(1.0, max(self._hand_1, 0.0)):
+            hand_1_outline = Colors.RED
         else:
-            self._hand_2_outline = Colors.GREEN
+            hand_1_outline = Colors.ORANGE
+
+        hand_2_fill = hand_2_outline = Colors.GREEN
+        self.alarm_2 = self._alarm_2
+        if self._hand_2 == None:
+            self._hand_2 = 0
+            self._hand_2_enable = False
+            hand_2_fill = hand_2_outline = None
+            self._alarm_2_palette.make_transparent(0)
+            self.alarm_2_marker.x = self.alarm_2_marker.y = 0
+        elif self._hand_2 != min(1.0, max(self._hand_2, 0.0)):
+            hand_2_outline = Colors.RED
+        else:
+            hand_2_outline = Colors.GREEN
 
         # Move plate/riser
         plate_disp = self._plate_y - (
             min(2, max(-2, (self._hand_1 + self._hand_2))) * 0.10 / 2
         )
-        self._x0, self.plate.y = self.cart_to_pixel(0.00, plate_disp, size=self._size)
+        _, self.plate.y = self.cart_to_pixel(0.00, plate_disp, size=self._size)
         self.riser.y = self.plate.y
 
         # Draw hands
@@ -377,17 +402,17 @@ class Scale(displayio.Group):
         x2, y2 = self.dial_to_pixel(
             self._hand_2 + 0.25, center=self._center, radius=base
         )
-        self.hand_2 = Triangle(
+        hand_2 = Triangle(
             x0,
             y0,
             x1,
             y1,
             x2,
             y2,
-            fill=Colors.GREEN,
-            outline=self._hand_2_outline,
+            fill=hand_2_fill,
+            outline=hand_2_outline,
         )
-        self._hands_group.append(self.hand_2)
+        self._hands_group.append(hand_2)
         if len(self._hands_group) > 2:
             self._hands_group.remove(self._hands_group[0])
 
@@ -400,17 +425,17 @@ class Scale(displayio.Group):
         x2, y2 = self.dial_to_pixel(
             self._hand_1 + 0.25, center=self._center, radius=base
         )
-        self.hand_1 = Triangle(
+        hand_1 = Triangle(
             x0,
             y0,
             x1,
             y1,
             x2,
             y2,
-            fill=Colors.ORANGE,
-            outline=self._hand_1_outline,
+            fill=hand_1_fill,
+            outline=hand_1_outline,
         )
-        self._hands_group.append(self.hand_1)
+        self._hands_group.append(hand_1)
         if len(self._hands_group) > 2:
             self._hands_group.remove(self._hands_group[0])
         return

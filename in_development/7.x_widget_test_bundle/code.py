@@ -49,6 +49,7 @@ test_display_group.append(magic_eye_1)
 # test_display_group.display_group.append(magic_eye_2.display_group)
 
 if not lone_eye:
+    #scale = Scale(alarm_1=0.22, alarm_2=0.66, max_scale=100, center=(0.85, 0.30), size=0.3)
     scale = Scale(max_scale=100, center=(0.85, 0.30), size=0.3)
     test_display_group.append(scale)
 
@@ -92,6 +93,7 @@ while True:
         m = i / 100
         magic_eye_1.value = m
         if not lone_eye:
+            #scale.value = (m, None)
             scale.value = (m, 0)
             bubble_display_1.value = i
         """else:
@@ -100,6 +102,7 @@ while True:
         m = i / 100
         magic_eye_1.value = m
         if not lone_eye:
+            #scale.value = (None, m)
             scale.value = (0, m)
             bubble_display_2.value = i
         """else:
