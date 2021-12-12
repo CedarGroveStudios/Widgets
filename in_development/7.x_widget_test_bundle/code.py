@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # bar_bubble_neo_code.py
-# 2021-12-11 v1.5
+# 2021-12-11 v1.6
 
 # For host board with integral display
 
@@ -111,6 +111,7 @@ while True:
         """else:
             time.sleep(0.050)"""
 
+    gc.collect()
     free_memory = gc.mem_free()
     frame = time.monotonic() - t0
     print(
@@ -176,8 +177,6 @@ while True:
 
         """else:
             time.sleep(0.050)"""
-
-    gc.collect()
 
     if not lone_eye:
         sdcard.screenshot()
