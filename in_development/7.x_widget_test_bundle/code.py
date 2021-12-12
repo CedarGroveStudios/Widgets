@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # bar_bubble_neo_code.py
-# 2021-12-10 v1.4
+# 2021-12-11 v1.5
 
 # For host board with integral display
 
@@ -49,8 +49,10 @@ test_display_group.append(magic_eye_1)
 # test_display_group.display_group.append(magic_eye_2.display_group)
 
 if not lone_eye:
-    #scale = Scale(alarm_1=0.22, alarm_2=0.66, max_scale=100, center=(0.85, 0.30), size=0.3)
-    scale = Scale(max_scale=100, center=(0.85, 0.30), size=0.3)
+    #scale = Scale(num_hands=2, max_scale=100, center=(0.85, 0.30), size=0.3)
+    scale = Scale(num_hands=2, max_scale=100, center=(0.85, 0.30), size=0.3)
+    scale.alarm1 = 0.22
+    scale.alarm2 = 0.66
     test_display_group.append(scale)
 
     bargraph_1 = Bargraph(units=2, center=(10, 10), mode="VU")
@@ -93,17 +95,18 @@ while True:
         m = i / 100
         magic_eye_1.value = m
         if not lone_eye:
-            #scale.value = (m, None)
-            scale.value = (m, 0)
+            scale.hand1 = m
+            scale.hand2 = 0
             bubble_display_1.value = i
         """else:
             time.sleep(0.050)"""
+
     for i in range(200, 0, -5):
         m = i / 100
         magic_eye_1.value = m
         if not lone_eye:
-            #scale.value = (None, m)
-            scale.value = (0, m)
+            scale.hand1 = 0
+            scale.hand2 = m
             bubble_display_2.value = i
         """else:
             time.sleep(0.050)"""
@@ -139,7 +142,8 @@ while True:
         # magic_eye_2.value = random.randrange(0, 120) / 100
 
         if not lone_eye:
-            scale.value = (random.randrange(0, 75) / 100, random.randrange(25, 50) / 100)
+            scale.hand1 = random.randrange(0, 75) / 100
+            scale.hand2 = random.randrange(25, 50) / 100
             neopixel_1.show(
                 random.randrange(0, neopixel_1.units),
                 random.randrange(0, 256, 16)
