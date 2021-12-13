@@ -1,6 +1,6 @@
 # LED bubble display widget
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-12-10 v0.8
+# 2021-12-12 v0.9
 
 import displayio
 import vectorio
@@ -46,14 +46,61 @@ class Colors:
 
 class BubbleDisplay(displayio.Group):
     def __init__(self, units=0, mode='Normal', center=(0, 0), size=1, display_size=(None, None)):
-        self._mode = mode
-        self._size = size
-        self._cluster_group = displayio.Group(scale=self._size)
-        self._cluster = displayio.Group(scale=size)
-        self._digits = displayio.Group(scale=size)
+        """Instantiate the HP QDSP-6064 4-digit 7-segment numeric end-stackable
+        LED display graphic object for DisplayIO devices. Builds a hierachical
+        DisplayIO group consisting of chip, digits, and digit segments.
 
+        This widget class displays decimal numeric values as well
+        as alphanumeric strings (with a limited character set). Decimal values
+        are right-justified with the decimal point placed within the 'ones'
+        digit or between digits as specified by the mode parameter. Strings are
+        left-justified. Alpha string characters are limited to upper or lower
+        case 'a', 'b', 'c', 'd', 'e', 'f', 'x', '.', '-', and the space
+        character.
+
+        Display size in pixels is specified as an integer tuple. If the
+        display_size tuple is not specified and a built-in display is listed in
+        the board class, the display_size tuple will be equal to the integral
+        built-in display width and height.
+
+        :param integer units: The number of end-stacked widget units. Defaults
+        to 1 widget (4 digits).
+        :param string mode: The decimal point display mode. The default 'Normal'
+        mode places the decimal point within the 'ones' digit; in 'HP-35' mode,
+        the decimal point is place in a separate digit between the 'ones' and
+        'one-tenth' digits.
+        :param float center: The widget center x,y tuple in normalized display
+        units. Defaults to (0.5, 0.5).
+        :param float size: The widget size factor relative to the display's
+        smaller axis. Defaults to 0.5.
+        :param integer display_size: The host display's integer width and
+        height tuple expressed in pixels. If (None, None) and the host includes
+        an integral display, the tuple value is set to (board.DISPLAY.width,
+        board.DISPLAY.height). """
+
+        # Determine default display size in pixels
+        if None in display_size:
+            import board
+
+            if 'DISPLAY' in dir(board):
+                self.WIDTH = board.DISPLAY.width
+                self.HEIGHT = board.DISPLAY.height
+            else:
+                raise ValueError('No integral display. Specify display size.')
+        else:
+            self.WIDTH = display_size[0]
+            self.HEIGHT = display_size[1]
+
+        # Define object center in normalized display and pixel coordinates
+        self._center_norm = center
+        self._center = self.display_to_pixel(self._center_norm[0], self._center_norm[1])
+        self._size = size
+        self._mode = mode
         self._units = units
-        self._origin = center
+
+        # Create displayio group layers
+        cluster = displayio.Group()
+        self._digits = displayio.Group()
 
         red_bkg_palette = displayio.Palette(1)
         red_bkg_palette[0] = Colors.RED_BKG
@@ -62,119 +109,134 @@ class BubbleDisplay(displayio.Group):
         blk_palette = displayio.Palette(1)
         blk_palette[0] = Colors.BLACK
 
-        for chip in range(0, self._units):
-            upper_left_corner = (self._origin[0] + (60 * chip), self._origin[1])
+        widget_upper_left = (self._center[0] - self.cart_dist_to_pixel(0.250 / 2 * self._units, self._size),
+            self._center[1] - self.cart_dist_to_pixel(0.100 / 2, self._size))
 
+        for chip in range(0, self._units):
+            upper_left_corner = (widget_upper_left[0] + (self.cart_dist_to_pixel(0.250 * chip, self._size)),
+                widget_upper_left[1])
             dip_pkg = vectorio.Rectangle(
                 pixel_shader=dip_pkg_palette,
                 x=upper_left_corner[0],
                 y=upper_left_corner[1],
-                width=60,
-                height=25,
+                width=self.cart_dist_to_pixel(0.250, self._size),
+                height=self.cart_dist_to_pixel(0.100, self._size),
             )
-            self._cluster.append(dip_pkg)
+            cluster.append(dip_pkg)
 
             dip_index = vectorio.Rectangle(
                 pixel_shader = blk_palette,
-                x=2 + upper_left_corner[0],
-                y=24 + upper_left_corner[1],
-                width=2,
-                height=2,
+                x=upper_left_corner[0],
+                y=self.cart_dist_to_pixel(0.096, self._size) + upper_left_corner[1],
+                width=self.cart_dist_to_pixel(0.010, self._size),
+                height=self.cart_dist_to_pixel(0.010, self._size),
             )
-            self._cluster.append(dip_index)
+            cluster.append(dip_index)
+
+            a1 = (self.cart_dist_to_pixel(0.021, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.025, self._size) + upper_left_corner[1])
+            b1 = (self.cart_dist_to_pixel(0.046, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.025, self._size) + upper_left_corner[1])
+            c1 = (self.cart_dist_to_pixel(0.042, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.050, self._size) + upper_left_corner[1])
+            d1 = (self.cart_dist_to_pixel(0.038, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1])
+            e1 = (self.cart_dist_to_pixel(0.013, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1])
+            f1 = (self.cart_dist_to_pixel(0.017, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.050, self._size) + upper_left_corner[1])
+            dp = (self.cart_dist_to_pixel(0.046, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1])
+            dp_size = self.cart_dist_to_pixel(0.008, self._size)
 
             for i in range(0, 4):
+                step = i * self.cart_dist_to_pixel(0.0625, self._size)
                 lens = RoundRect(
-                    upper_left_corner[0] + (i * 15),
-                    0 + upper_left_corner[1],
-                    15,
-                    25,
-                    7,
+                    upper_left_corner[0] + step,
+                    upper_left_corner[1],
+                    self.cart_dist_to_pixel(0.063, self._size),
+                    self.cart_dist_to_pixel(0.104, self._size),
+                    self.cart_dist_to_pixel(0.029, self._size),
                     fill=Colors.RED_BKG,
                     outline=Colors.RED_LENS,
                 )
-                self._cluster.append(lens)
+                cluster.append(lens)
 
                 seg_a = Line(
-                    4 + upper_left_corner[0] + (i * 15) + 1,
-                    6 + upper_left_corner[1],
-                    4 + upper_left_corner[0] + (i * 15) + 6 + 1,
-                    6 + upper_left_corner[1],
+                    a1[0] + step,
+                    a1[1],
+                    b1[0] + step,
+                    b1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_a)
 
                 seg_b = Line(
-                    4 + upper_left_corner[0] + (i * 15) + 6 + 1,
-                    6 + upper_left_corner[1],
-                    4 + upper_left_corner[0] + (i * 15) + 6,
-                    12 + upper_left_corner[1],
+                    b1[0] + step,
+                    b1[1],
+                    c1[0] + step,
+                    c1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_b)
 
                 seg_c = Line(
-                    4 + upper_left_corner[0] + (i * 15) + 6,
-                    12 + upper_left_corner[1],
-                    4 + upper_left_corner[0] + (i * 15) + 6 - 1,
-                    18 + upper_left_corner[1],
+                    c1[0] + step,
+                    c1[1],
+                    d1[0] + step,
+                    d1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_c)
 
                 seg_d = Line(
-                    4 + upper_left_corner[0] + (i * 15) - 1,
-                    18 + upper_left_corner[1],
-                    4 + upper_left_corner[0] + (i * 15) + 6 - 1,
-                    18 + upper_left_corner[1],
+                    d1[0] + step,
+                    d1[1],
+                    e1[0] + step,
+                    e1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_d)
 
                 seg_e = Line(
-                    4 + upper_left_corner[0] + (i * 15),
-                    12 + upper_left_corner[1],
-                    4 + upper_left_corner[0] + (i * 15) - 1,
-                    18 + upper_left_corner[1],
+                    e1[0] + step,
+                    e1[1],
+                    f1[0] + step,
+                    f1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_e)
 
                 seg_f = Line(
-                    4 + upper_left_corner[0] + (i * 15) + 1,
-                    6 + upper_left_corner[1],
-                    4 + upper_left_corner[0] + (i * 15),
-                    12 + upper_left_corner[1],
+                    f1[0] + step,
+                    f1[1],
+                    a1[0] + step,
+                    a1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_f)
 
                 seg_g = Line(
-                    4 + upper_left_corner[0] + (i * 15),
-                    12 + upper_left_corner[1],
-                    4 + upper_left_corner[0] + (i * 15) + 6,
-                    12 + upper_left_corner[1],
+                    f1[0] + step,
+                    f1[1],
+                    c1[0] + step,
+                    c1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_g)
 
                 seg_dp = Rect(
-                    4 + upper_left_corner[0] + (i * 15) + 6 + 1,
-                    18 + upper_left_corner[1],
-                    2,
-                    2,
+                    dp[0] + step,
+                    dp[1],
+                    dp_size,
+                    dp_size,
                     fill=Colors.RED_BKG,
                 )
                 self._digits.append(seg_dp)
         super().__init__()
-        self.append(self._cluster)
+        self.append(cluster)
         self.append(self._digits)
         return
-
-    @property
-    def center(self):
-        """Bubble display object center."""
-        return self._origin
 
     @property
     def units(self):
@@ -182,14 +244,19 @@ class BubbleDisplay(displayio.Group):
         return self._units
 
     @property
-    def size(self):
-        """Bubble display object size."""
-        return self._size
-
-    @property
     def mode(self):
         """Bubble display display mode."""
         return self._mode
+
+    @property
+    def center(self):
+        """Bubble display object center."""
+        return self._center_norm
+
+    @property
+    def size(self):
+        """Bubble display object size."""
+        return self._size
 
     @property
     def display_size(self):
@@ -202,8 +269,8 @@ class BubbleDisplay(displayio.Group):
         return self._value
 
     @value.setter
-    def value(self, value=None, mode='Normal'):
-        self._show_value(value, mode)
+    def value(self, value=None):
+        self._show_value(value, self._mode)
 
     @property
     def text(self):
@@ -230,7 +297,7 @@ class BubbleDisplay(displayio.Group):
     #    return
 
     def _show_text(self, text=''):
-        text = text[0 : self._units * 4]  # truncate to left-most digits
+        text = text[0 : self._units * 4]  # Truncate to left-most digits
         text = (' ' * ((self._units * 4) - len(text))) + text
 
         for _digit in range(0, self._units * 4):

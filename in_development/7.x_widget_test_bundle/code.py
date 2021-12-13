@@ -61,10 +61,10 @@ if not lone_eye:
     bargraph_2 = Bargraph(units=2, center=(10, 75), mode="VU")
     test_display_group.append(bargraph_2)
 
-    bubble_display_1 = BubbleDisplay(units=1, center=(5, 40))
+    bubble_display_1 = BubbleDisplay(units=1, size = 1, center=(0.25, 0.25))
     test_display_group.append(bubble_display_1)
 
-    bubble_display_2 = BubbleDisplay(units=1, center=(5, 105))
+    bubble_display_2 = BubbleDisplay(units=1, size=1, center=(0.25, 0.5))
     test_display_group.append(bubble_display_2)
 
     neo_units = 10
