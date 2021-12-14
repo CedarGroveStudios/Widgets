@@ -2,45 +2,37 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye_example.py
-# 2021-12-09 v1.1
+# 2021-12-14 v1.1
 
-# For host board with integral display
+# For host board with integral display (PyPortal, Clue, FunHouse, etc.)
 
-import gc
-import time
 import board
 import random
-from analogio import AnalogIn
-from simpleio import tone
+import time
 
 from cedargrove_widgets.magic_eye import MagicEye
 
-tone(board.A0, 440, 0.1)
-
 display = board.DISPLAY
-display.brightness = 0.75
-display.rotation = 0
 
-magic_eye_1 = MagicEye(size=0.55)
-magic_eye_2 = MagicEye((0.25, 0.25), size=0.20)
-magic_eye_1.append(magic_eye_2)
+# Instantiate the MagicEye widget
+# Locate at display center (0.5, 0.5) with size = 0.5
+magic_eye = MagicEye()
 
-display.show(magic_eye_1)
-tone(board.A0, 880, 0.1)
+display.show(magic_eye)
 
 while True:
-    t0 = time.monotonic()
-    gc.collect()
 
-    for i in range(0, 200, 5):
+    # Close and open the wedge
+    for i in range(0, 200, 1):
         m = i / 100
-        magic_eye_1.value = m
-    for i in range(200, 0, -5):
+        magic_eye.value = m
+        time.sleep(0.01)
+    for i in range(200, 0, -1):
         m = i / 100
-        magic_eye_1.value = m
-    print(f'frame: {(time.monotonic() - t0):5.2f} sec   free memory: {gc.mem_free()} bytes')
+        magic_eye.value = m
+        time.sleep(0.01)
 
-    m0 = 0
+    # Randomly control the wedge
     for i in range(0, 100):
-        magic_eye_1.value = (random.randrange(0, 120) / 100)
-        magic_eye_2.value = (random.randrange(0, 120) / 100)
+        magic_eye.value = (random.randrange(0, 200) / 100)
+        time.sleep(0.01)

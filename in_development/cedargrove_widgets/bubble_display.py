@@ -1,6 +1,8 @@
-# LED bubble display widget
+# SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
+# SPDX-License-Identifier: MIT# LED bubble display widget
+
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-12-12 v0.9
+# 2021-12-12 v1.0
 
 import displayio
 import vectorio
@@ -11,26 +13,26 @@ from adafruit_display_shapes.roundrect import RoundRect
 # 8-bit to 7 segment
 #  bits: dp g f e d c b a
 NUMBERS = {
-    '0': 0b00111111,  # 0
-    '1': 0b00000110,  # 1
-    '2': 0b01011011,  # 2
-    '3': 0b01001111,  # 3
-    '4': 0b01100110,  # 4
-    '5': 0b01101101,  # 5
-    '6': 0b01111101,  # 6
-    '7': 0b00000111,  # 7
-    '8': 0b01111111,  # 8
-    '9': 0b01101111,  # 9
-    'a': 0b01110111,  # a
-    'b': 0b01111100,  # b
-    'c': 0b00111001,  # C
-    'd': 0b01011110,  # d
-    'e': 0b01111001,  # E
-    'f': 0b01110001,  # F
-    '-': 0b01000000,  # -
-    '.': 0b10000000,  # .
+    "0": 0b00111111,  # 0
+    "1": 0b00000110,  # 1
+    "2": 0b01011011,  # 2
+    "3": 0b01001111,  # 3
+    "4": 0b01100110,  # 4
+    "5": 0b01101101,  # 5
+    "6": 0b01111101,  # 6
+    "7": 0b00000111,  # 7
+    "8": 0b01111111,  # 8
+    "9": 0b01101111,  # 9
+    "a": 0b01110111,  # a
+    "b": 0b01111100,  # b
+    "c": 0b00111001,  # C
+    "d": 0b01011110,  # d
+    "e": 0b01111001,  # E
+    "f": 0b01110001,  # F
+    "-": 0b01000000,  # -
+    ".": 0b10000000,  # .
     " ": 0b00000000,  # <space>
-    'x': 0b00001000,  # _ (replace x with underscore for hexadecimal text)
+    "x": 0b00001000,  # _ (replace x with underscore for hexadecimal text)
 }
 
 
@@ -45,10 +47,17 @@ class Colors:
 
 
 class BubbleDisplay(displayio.Group):
-    def __init__(self, units=0, mode='Normal', center=(0, 0), size=1, display_size=(None, None)):
-        """Instantiate the HP QDSP-6064 4-digit 7-segment numeric end-stackable
+    def __init__(
+        self, units=1, digits=4, mode="Normal", center=(0, 0), size=1,
+        display_size=(None, None),
+    ):
+        """Instantiate the multi-digit 7-segment numeric end-stackable
         LED display graphic object for DisplayIO devices. Builds a hierachical
         DisplayIO group consisting of chip, digits, and digit segments.
+
+        This widget is based on the HP-QDSP-6064 4-digit and the HP-35
+        calculator's HP-5802-7433 3-digit 7-segment numeric end-stackable
+        LED displays.
 
         This widget class displays decimal numeric values as well
         as alphanumeric strings (with a limited character set). Decimal values
@@ -64,7 +73,9 @@ class BubbleDisplay(displayio.Group):
         built-in display width and height.
 
         :param integer units: The number of end-stacked widget units. Defaults
-        to 1 widget (4 digits).
+        to 1 widget.
+        :param integer digits: The number of digits per display
+        cluster (unit) ranging from 1 to 5 digits. Defaults to 4 digits per unit.
         :param string mode: The decimal point display mode. The default 'Normal'
         mode places the decimal point within the 'ones' digit; in 'HP-35' mode,
         the decimal point is place in a separate digit between the 'ones' and
@@ -76,17 +87,17 @@ class BubbleDisplay(displayio.Group):
         :param integer display_size: The host display's integer width and
         height tuple expressed in pixels. If (None, None) and the host includes
         an integral display, the tuple value is set to (board.DISPLAY.width,
-        board.DISPLAY.height). """
+        board.DISPLAY.height)."""
 
         # Determine default display size in pixels
         if None in display_size:
             import board
 
-            if 'DISPLAY' in dir(board):
+            if "DISPLAY" in dir(board):
                 self.WIDTH = board.DISPLAY.width
                 self.HEIGHT = board.DISPLAY.height
             else:
-                raise ValueError('No integral display. Specify display size.')
+                raise ValueError("No integral display. Specify display size.")
         else:
             self.WIDTH = display_size[0]
             self.HEIGHT = display_size[1]
@@ -96,7 +107,8 @@ class BubbleDisplay(displayio.Group):
         self._center = self.display_to_pixel(self._center_norm[0], self._center_norm[1])
         self._size = size
         self._mode = mode
-        self._units = units
+        self._units = max(0, units)
+        self._num_digits = min(5, max(1, digits))
 
         # Create displayio group layers
         cluster = displayio.Group()
@@ -109,12 +121,18 @@ class BubbleDisplay(displayio.Group):
         blk_palette = displayio.Palette(1)
         blk_palette[0] = Colors.BLACK
 
-        widget_upper_left = (self._center[0] - self.cart_dist_to_pixel(0.250 / 2 * self._units, self._size),
-            self._center[1] - self.cart_dist_to_pixel(0.100 / 2, self._size))
+        widget_upper_left = (
+            self._center[0]
+            - self.cart_dist_to_pixel(0.250 / 2 * self._units, self._size),
+            self._center[1] - self.cart_dist_to_pixel(0.100 / 2, self._size),
+        )
 
         for chip in range(0, self._units):
-            upper_left_corner = (widget_upper_left[0] + (self.cart_dist_to_pixel(0.250 * chip, self._size)),
-                widget_upper_left[1])
+            upper_left_corner = (
+                widget_upper_left[0]
+                + (self.cart_dist_to_pixel(0.250 * chip, self._size)),
+                widget_upper_left[1],
+            )
             dip_pkg = vectorio.Rectangle(
                 pixel_shader=dip_pkg_palette,
                 x=upper_left_corner[0],
@@ -125,7 +143,7 @@ class BubbleDisplay(displayio.Group):
             cluster.append(dip_pkg)
 
             dip_index = vectorio.Rectangle(
-                pixel_shader = blk_palette,
+                pixel_shader=blk_palette,
                 x=upper_left_corner[0],
                 y=self.cart_dist_to_pixel(0.096, self._size) + upper_left_corner[1],
                 width=self.cart_dist_to_pixel(0.010, self._size),
@@ -133,29 +151,53 @@ class BubbleDisplay(displayio.Group):
             )
             cluster.append(dip_index)
 
-            a1 = (self.cart_dist_to_pixel(0.021, self._size) + upper_left_corner[0],
-                self.cart_dist_to_pixel(0.025, self._size) + upper_left_corner[1])
-            b1 = (self.cart_dist_to_pixel(0.046, self._size) + upper_left_corner[0],
-                self.cart_dist_to_pixel(0.025, self._size) + upper_left_corner[1])
-            c1 = (self.cart_dist_to_pixel(0.042, self._size) + upper_left_corner[0],
-                self.cart_dist_to_pixel(0.050, self._size) + upper_left_corner[1])
-            d1 = (self.cart_dist_to_pixel(0.038, self._size) + upper_left_corner[0],
-                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1])
-            e1 = (self.cart_dist_to_pixel(0.013, self._size) + upper_left_corner[0],
-                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1])
-            f1 = (self.cart_dist_to_pixel(0.017, self._size) + upper_left_corner[0],
-                self.cart_dist_to_pixel(0.050, self._size) + upper_left_corner[1])
-            dp = (self.cart_dist_to_pixel(0.046, self._size) + upper_left_corner[0],
-                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1])
+            a1 = (
+                self.cart_dist_to_pixel(0.021, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.025, self._size) + upper_left_corner[1],
+            )
+            b1 = (
+                self.cart_dist_to_pixel(0.046, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.025, self._size) + upper_left_corner[1],
+            )
+            c1 = (
+                self.cart_dist_to_pixel(0.042, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.050, self._size) + upper_left_corner[1],
+            )
+            d1 = (
+                self.cart_dist_to_pixel(0.038, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1],
+            )
+            e1 = (
+                self.cart_dist_to_pixel(0.013, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1],
+            )
+            f1 = (
+                self.cart_dist_to_pixel(0.017, self._size) + upper_left_corner[0],
+                self.cart_dist_to_pixel(0.050, self._size) + upper_left_corner[1],
+            )
+            if mode == "HP-35":
+                dp = (
+                    self.cart_dist_to_pixel(0.029, self._size) + upper_left_corner[0],
+                    self.cart_dist_to_pixel(0.065, self._size) + upper_left_corner[1],
+                    )
+            else:
+                dp = (
+                    self.cart_dist_to_pixel(0.046, self._size) + upper_left_corner[0],
+                    self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1],
+                    )
+
             dp_size = self.cart_dist_to_pixel(0.008, self._size)
 
-            for i in range(0, 4):
-                step = i * self.cart_dist_to_pixel(0.0625, self._size)
+            step_norm = 0.250 / self._num_digits
+            step_offset = self.cart_dist_to_pixel(0.09374 - ((0.25 - step_norm) / 2), self._size)
+
+            for i in range(0, self._num_digits):
+                step = i * self.cart_dist_to_pixel(step_norm, self._size)
                 lens = RoundRect(
                     upper_left_corner[0] + step,
                     upper_left_corner[1],
-                    self.cart_dist_to_pixel(0.063, self._size),
-                    self.cart_dist_to_pixel(0.104, self._size),
+                    self.cart_dist_to_pixel(step_norm, self._size),
+                    self.cart_dist_to_pixel(0.100, self._size),
                     self.cart_dist_to_pixel(0.029, self._size),
                     fill=Colors.RED_BKG,
                     outline=Colors.RED_LENS,
@@ -163,70 +205,70 @@ class BubbleDisplay(displayio.Group):
                 cluster.append(lens)
 
                 seg_a = Line(
-                    a1[0] + step,
+                    a1[0] + step + step_offset,
                     a1[1],
-                    b1[0] + step,
+                    b1[0] + step + step_offset,
                     b1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_a)
 
                 seg_b = Line(
-                    b1[0] + step,
+                    b1[0] + step + step_offset,
                     b1[1],
-                    c1[0] + step,
+                    c1[0] + step + step_offset,
                     c1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_b)
 
                 seg_c = Line(
-                    c1[0] + step,
+                    c1[0] + step + step_offset,
                     c1[1],
-                    d1[0] + step,
+                    d1[0] + step + step_offset,
                     d1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_c)
 
                 seg_d = Line(
-                    d1[0] + step,
+                    d1[0] + step + step_offset,
                     d1[1],
-                    e1[0] + step,
+                    e1[0] + step + step_offset,
                     e1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_d)
 
                 seg_e = Line(
-                    e1[0] + step,
+                    e1[0] + step + step_offset,
                     e1[1],
-                    f1[0] + step,
+                    f1[0] + step + step_offset,
                     f1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_e)
 
                 seg_f = Line(
-                    f1[0] + step,
+                    f1[0] + step + step_offset,
                     f1[1],
-                    a1[0] + step,
+                    a1[0] + step + step_offset,
                     a1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_f)
 
                 seg_g = Line(
-                    f1[0] + step,
+                    f1[0] + step + step_offset,
                     f1[1],
-                    c1[0] + step,
+                    c1[0] + step + step_offset,
                     c1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_g)
 
                 seg_dp = Rect(
-                    dp[0] + step,
+                    dp[0] + step + step_offset,
                     dp[1],
                     dp_size,
                     dp_size,
@@ -242,6 +284,11 @@ class BubbleDisplay(displayio.Group):
     def units(self):
         """Number of units."""
         return self._units
+
+    @property
+    def units(self):
+        """Number of digits per unit."""
+        return self._digits
 
     @property
     def mode(self):
@@ -278,7 +325,7 @@ class BubbleDisplay(displayio.Group):
         return self._text
 
     @text.setter
-    def text(self, text=''):
+    def text(self, text=""):
         self._show_text(text)
 
     # @property
@@ -296,15 +343,15 @@ class BubbleDisplay(displayio.Group):
     #    SHOULD THIS BE A FUNCTION?
     #    return
 
-    def _show_text(self, text=''):
-        text = text[0 : self._units * 4]  # Truncate to left-most digits
-        text = (' ' * ((self._units * 4) - len(text))) + text
+    def _show_text(self, text=""):
+        text = text[0 : self._units * self._num_digits]  # Truncate to left-most digits
+        text = (" " * ((self._units * self._num_digits) - len(text))) + text
 
-        for _digit in range(0, self._units * 4):
+        for _digit in range(0, self._units * self._num_digits):
             if text[_digit] in NUMBERS:
                 _decode = NUMBERS[text[_digit]]
             else:
-                _decode = NUMBERS[' ']
+                _decode = NUMBERS[" "]
             for _segment in range(0, 8):
                 if _decode & pow(2, _segment):
                     self._digits[(_digit * 8) + _segment].color = Colors.RED
@@ -313,29 +360,29 @@ class BubbleDisplay(displayio.Group):
                     self._digits[(_digit * 8) + _segment].color = Colors.RED_BKG
                     self._digits[(_digit * 8) + _segment].fill = Colors.RED_BKG
 
-    def _show_value(self, value=None, mode='Normal'):
+    def _show_value(self, value=None, mode="Normal"):
         """ use mode='HP-35' for decimal point between digits """
         self._mode = mode
         if value == None:
-            _display = ''
+            _display = ""
         else:
             _display = str(value)
 
         # if value string is larger than can be displayed, show dashes
-        if len(_display) > self._units * 4:
-            _display = '-' * self._units * 4
+        if len(_display) > self._units * self._num_digits:
+            _display = "-" * self._units * self._num_digits
         else:
-            _display = (' ' * ((self._units * 4) - len(_display))) + _display
+            _display = (" " * ((self._units * self._num_digits) - len(_display))) + _display
 
         # locate decimal point and remove from display string
         dp_digit = _display.find(".")
-        if dp_digit > -1 and self._mode != 'HP-35':
-            _display = ' ' + _display[0 : dp_digit] + _display[dp_digit + 1 :]
+        if dp_digit > -1 and self._mode != "HP-35":
+            _display = " " + _display[0:dp_digit] + _display[dp_digit + 1 :]
 
         self._show_text(_display)
 
         # clear all decimal points and plot the current point
-        for digit in range(0, self._units * 4):
+        for digit in range(0, self._units * self._num_digits):
             self._digits[(digit * 8) + 7].fill = Colors.RED_BKG
         if dp_digit > -1:
             self._digits[(dp_digit * 8) + 7].fill = Colors.RED
