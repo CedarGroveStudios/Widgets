@@ -48,7 +48,7 @@ class Colors:
 
 class BubbleDisplay(displayio.Group):
     def __init__(
-        self, units=1, digits=4, mode="Normal", center=(0, 0), size=1,
+        self, units=1, digits=4, mode="Normal", center=(0.5, 0.5), size=1,
         display_size=(None, None),
     ):
         """Instantiate the multi-digit 7-segment numeric end-stackable
@@ -308,7 +308,7 @@ class BubbleDisplay(displayio.Group):
     @property
     def display_size(self):
         """Display size in pixels."""
-        return self._display_size
+        return (self.WIDTH, self.HEIGHT)
 
     @property
     def value(self):
